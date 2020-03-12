@@ -1,0 +1,8 @@
+# Main make.code.defn file for thorn PrimitiveSolver
+# $Header:$
+
+# Source files in this directory
+SRCS = construct_primitives.c steffenson.c
+
+# Subdirectories containing source files
+SUBDIRS = 

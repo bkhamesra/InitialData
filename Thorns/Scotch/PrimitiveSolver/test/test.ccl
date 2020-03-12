@@ -1,0 +1,4 @@
+# relative error below is the same as set in param.ccl
+RELTOL 1e-5
+
+NPROCS 2

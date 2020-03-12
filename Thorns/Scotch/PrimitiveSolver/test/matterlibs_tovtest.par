@@ -1,0 +1,164 @@
+
+ActiveThorns = "TmunuBase TwoPuncturesMatter MatterLibs ADMCoupling ADMMacros Whisky EOS_Base EOS_Polytrope GenericFD CoordBase SymBase Boundary CartGrid3d Time CarpetIOBasic CarpetIOScalar IOUtil Carpet CarpetLib CarpetReduce CarpetInterp CarpetSlab CarpetRegrid CarpetIOASCII ADMBase  StaticConformal  SpaceMask Slab InitBase ReflectionSymmetry LoopControl GSL HydroBase RiemannSolverMarquina ReconstructPPM RecoverMarti NaNChecker MoL SphericalSurface"
+
+#############################################################
+# Grid
+#############################################################
+
+CartGrid3D::type                        = "coordbase"
+CartGrid3D::domain                      = "full"
+CartGrid3D::avoid_origin                = "no"
+
+CoordBase::domainsize                   = minmax
+CoordBase::xmin                         = -27
+CoordBase::ymin                         = -27
+CoordBase::zmin                         = 0
+CoordBase::xmax                         = 27
+CoordBase::ymax                         = 27
+CoordBase::zmax                         = 27
+CoordBase::dx                           = 0.9
+CoordBase::dy                           = 0.9
+CoordBase::dz                           = 0.9
+CoordBase::boundary_size_x_lower        = 3
+CoordBase::boundary_size_y_lower        = 3
+CoordBase::boundary_size_z_lower        = 3
+CoordBase::boundary_shiftout_x_lower    = 0
+CoordBase::boundary_shiftout_y_lower    = 0
+CoordBase::boundary_shiftout_z_lower    = 1
+CoordBase::boundary_size_x_upper        = 3
+CoordBase::boundary_size_y_upper        = 3
+CoordBase::boundary_size_z_upper        = 3
+CoordBase::boundary_shiftout_x_upper    = 0
+CoordBase::boundary_shiftout_y_upper    = 0
+CoordBase::boundary_shiftout_z_upper    = 0
+
+#############################################################
+# Symmetries
+#############################################################
+
+ReflectionSymmetry::reflection_x        = "no"
+ReflectionSymmetry::reflection_y        = "no"
+ReflectionSymmetry::reflection_z        = "yes"
+ReflectionSymmetry::avoid_origin_x      = "no"
+ReflectionSymmetry::avoid_origin_y      = "no"
+ReflectionSymmetry::avoid_origin_z      = "no"
+
+#############################################################
+# CarpetRegrid
+#############################################################
+
+CarpetRegrid::refinement_levels           = 1
+CarpetRegrid::verbose                     = "no"
+
+
+#############################################################
+# Carpet
+#############################################################
+
+Carpet::ghost_size                      = 3
+Carpet::domain_from_coordbase           = "yes"
+Carpet::max_refinement_levels           = 1
+Carpet::use_buffer_zones                = "yes"
+Carpet::verbose                         = "no"
+Carpet::poison_new_timelevels           = "yes"
+Carpet::check_for_poison                = "no"
+Carpet::poison_value                    = 113
+Carpet::init_fill_timelevels            = "yes"
+
+#############################################################
+# CarpetLib
+#############################################################
+
+CarpetLib::poison_new_memory            = "yes"
+CarpetLib::poison_value                 = 114
+
+#############################################################
+# Time integration
+#############################################################
+
+Cactus::terminate                     = "iteration"
+Cactus::cctk_itlast                   = 0
+Cactus::highlight_warning_messages    = "no"
+
+#############################################################
+# Initial data
+#############################################################
+
+ADMBase::initial_data = "twopuncturesmatter"
+ADMBase::initial_lapse = "tov"
+ADMBase::initial_shift = "zero"
+ADMBase::admbase_boundary_condition = "none" # Only use since this is ID test
+
+# Uncomment these for fast but very inaccurate initial data
+TwoPuncturesMatter::npoints_A = 6
+TwoPuncturesMatter::npoints_B = 6
+TwoPuncturesMatter::npoints_phi = 6
+
+TwoPuncturesMatter::par_b          =  15
+TwoPuncturesMatter::par_m_plus     =  0
+TwoPuncturesMatter::par_m_minus    =  0.
+TwoPuncturesMatter::par_P_plus[1]  =  0
+TwoPuncturesMatter::epsilon = 0
+TwoPuncturesMatter::hydro_field = "yes"
+TwoPuncturesMatter::zero_velocity = "yes"
+
+#############################################################
+# Initial data for Matter
+#############################################################
+
+MatterLibs::rho_profile = "TOV"
+MatterLibs::cloud_x0[0] = -15
+MatterLibs::cloud_rho[0] = 1e-3
+MatterLibs::testsuite = "no" 
+
+#############################################################
+# Matter coupling
+#############################################################
+
+TmunuBase::timelevels               = 3
+TmunuBase::stress_energy_storage    = "yes"
+TmunuBase::stress_energy_at_RHS	    = "yes"
+
+#############################################################
+# Whisky, Other Parameters 
+#############################################################
+
+HydroBase::timelevels                = 3
+Whisky::whisky_eos_type           = "Polytype"
+Whisky::whisky_eos_table          = "2D_Polytrope"
+Whisky::whisky_stencil            = 3
+Whisky::bound                     = "none"
+Whisky::rho_abs_min               = 1.e-7
+Whisky::initial_atmosphere_factor = 0.999
+Whisky::Riemann_Solver            = "Marquina"
+Whisky::Recon_Method              = "ppm"
+
+ReconstructPPM::ppm_detect = "no"
+ReconstructPPM::ppm_epsilon = 0.0
+ReconstructPPM::ppm_omega1 = 0.52
+ReconstructPPM::ppm_omega2 = 0.0
+ReconstructPPM::ppm_epsilon_shock = 0.1
+ReconstructPPM::ppm_eta1 = 5.0
+ReconstructPPM::ppm_k0 = 0.2
+
+SpaceMask::use_mask	  = "yes"
+
+#############################################################
+# Output
+#############################################################
+
+IO::out_dir                          = $parfile
+IO::out_fileinfo                     = "all"
+
+CarpetIOBasic::outInfo_every         = 1
+CarpetIOBasic::outInfo_vars          = "ADMBase::alp"
+CarpetIOBasic::real_max              = 1e6
+CarpetIOBasic::int_width             = 12
+
+CarpetIOASCII::out1D_every           = 1
+CarpetIOASCII::out1D_x               = "yes"
+CarpetIOASCII::out1D_y               = "no"
+CarpetIOASCII::out1D_z               = "no"
+CarpetIOASCII::out1D_d               = "no"
+CarpetIOASCII::out1D_vars            = "ADMBase::gxx ADMBase::alp ADMBase::betax HydroBase::rho HydroBase::press HydroBase::eps HydroBase::vel Whisky::whisky_aux_scalar_var Whisky::whisky_cons_scalar_var Whisky::whisky_cons_vector_var"
+CarpetIOASCII::out_precision         = 19

@@ -1,0 +1,4 @@
+# Configuration definition for thorn BowenID
+
+REQUIRES VectorAlgebra OutputTable
+

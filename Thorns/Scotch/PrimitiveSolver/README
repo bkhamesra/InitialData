@@ -1,0 +1,18 @@
+CVS info   : $Header:$
+
+Cactus Code Thorn MatterLibs
+Thorn Author(s)     : Tanja Bode <tbode@gravity.psu.edu>
+Thorn Maintainer(s) : Tanja Bode <tbode@gravity.psu.edu>
+--------------------------------------------------------------------------
+
+Purpose of the thorn:
+
+Provides density functions that are to be accessed by TwoPunctures_Matter 
+in calculating rho for the hamiltonian constraint.
+
+Current types of rho:
+
+	* Gaussian Packets
+	* Gaussian Shells
+	* Constant cloud of finite radius
+

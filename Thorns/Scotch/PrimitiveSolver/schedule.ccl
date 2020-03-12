@@ -1,0 +1,8 @@
+# Schedule definitions for thorn MatterLibs
+# $Header:$
+
+schedule PrimitiveSolver_SetPrims in Whisky_Initial
+{
+	 LANG: C
+} "Set primitives (and possibly metric) from MatterLibs"
+

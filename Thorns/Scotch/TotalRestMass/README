@@ -1,0 +1,12 @@
+Cactus Code Thorn TotalRestMass
+Author(s)    : Tanja Bode <tanja.bode@physics.gatech.edu>
+Maintainer(s): Tanja Bode <tanja.bode@physics.gatech.edu>
+Licence      : GPL
+--------------------------------------------------------------------------
+
+1. Purpose
+
+Extremely basic thorn to sum over the rest mass in entire spacetime.
+Implements simple summation of rho*dV*weight where weight is generally
+just the CarpetWeight with modifications by AHMask to avoid the area 
+inside the AH.

@@ -1,0 +1,8 @@
+# Main make.code.defn file for thorn TwoPuncturesSolver
+# $Header: $
+
+# Source files in this directory
+SRCS = CoordTransf.c Equations.c FuncAndJacobian.c Newton.c TwoPunctures.c TP_utilities.c
+
+# Subdirectories containing source files
+SUBDIRS = 

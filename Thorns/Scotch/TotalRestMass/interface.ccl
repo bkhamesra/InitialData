@@ -1,0 +1,28 @@
+# Interface definition for thorn TotalRestMass
+# $Header:$
+
+implements: totalrestmass
+inherits: GenericFD ADMBase SphericalSurface HydroBase
+
+USES INCLUDE: GenericFD.h
+USES INCLUDE: carpet.hh
+USES INCLUDE: Symmetry.h
+
+CCTK_REAL VolumeMass[intvolumes] TYPE=scalar tags='checkpoint="no"' "Mass integrated within spheres"
+CCTK_REAL Volume_dMassdt[intvolumes] TYPE=scalar tags='checkpoint="no"' "Integration of dMdt within spheres"
+CCTK_INT SymmetryFactor TYPE=scalar tags='checkpoint="no"' "Contains info concerning how many symmetries" 
+
+CCTK_INT FUNCTION \
+    GetBoundarySpecification (CCTK_INT IN size,                  \
+                              CCTK_INT OUT ARRAY nboundaryzones, \
+                              CCTK_INT OUT ARRAY is_internal,    \
+                              CCTK_INT OUT ARRAY is_staggered,   \
+                              CCTK_INT OUT ARRAY shiftout)
+USES FUNCTION GetBoundarySpecification
+
+CCTK_INT FUNCTION                         \
+    GetSymmetryBoundaries                 \
+        (CCTK_POINTER_TO_CONST IN cctkGH, \
+         CCTK_INT IN size,                \
+         CCTK_INT OUT ARRAY symbnd)
+USES FUNCTION GetSymmetryBoundaries

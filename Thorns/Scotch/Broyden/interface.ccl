@@ -1,0 +1,27 @@
+implements: broyden
+
+CCTK_REAL FUNCTION getRho0W(CCTK_INT IN polyhandle, CCTK_REAL IN xx, CCTK_REAL IN yy, CCTK_REAL IN zz, CCTK_REAL IN psiL)
+USES FUNCTION getRho0W
+
+CCTK_REAL FUNCTION getU(CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+USES FUNCTION getU
+
+CCTK_REAL FUNCTION getConformalFactor(CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+USES FUNCTION getConformalFactor
+
+CCTK_REAL FUNCTION getExternalPsiGuess(CCTK_INT IN idx, CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+USES FUNCTION getExternalPsiGuess
+
+void FUNCTION remakeSources(CCTK_INT IN resolve)
+USES FUNCTION remakeSources
+
+void FUNCTION recomputeTP(CCTK_INT IN resolve)
+USES FUNCTION recomputeTP
+
+CCTK_REAL FUNCTION getSourceMass(CCTK_INT IN index)
+USES FUNCTION getSourceMass
+
+CCTK_REAL FUNCTION getRestMass(CCTK_INT IN index)
+USES FUNCTION getRestMass
+
+USES INCLUDE: BasicIntegrator.hh 

@@ -1,0 +1,16 @@
+CVS info   : $Header:$
+
+Cactus Code Thorn MatterLibs
+Thorn Author(s)     : Tanja Bode <tbode@gravity.psu.edu>
+Thorn Maintainer(s) : Tanja Bode <tbode@gravity.psu.edu>
+--------------------------------------------------------------------------
+
+Purpose of the thorn:
+
+This is a follow up code to Bowen York ID paper where after solving the constraints, we want to 
+Construct the primitive variables from conformal ones. This is done by transforming pressure, density 
+and lorentz factor along with gamma law to compute pressure, epsilon,  rho_0 and W. This is not an ideal 
+solution and does have a problem. In constructing the primitives in this way, we ignore the polytropic equation 
+of state which ends up being violated. While this is not ideal, there is no completely correct solution to this. 
+
+
