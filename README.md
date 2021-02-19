@@ -1,2 +1,2 @@
-# MixedBinary_Testing
-Mixed Binary Infrastructure For Testing Purposes
+# Initial Data Codes
+This repo contains initial data codes used for NR simulations of mixed binary systems. 
