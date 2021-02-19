@@ -1,0 +1,2014 @@
+#!/usr/bin/perl -W
+# Binary system: (NS) Star + BH
+use List::Util qw(min max);
+use POSIX;
+use strict;
+
+# Constants 
+my $pi = 3.141592653589793;
+my $c = 1.0;
+
+# Conversion Factor
+my $Rsun_in_Msun = 4.7088e5;
+my $metre_in_Msun = 0.000677068614947; 	# 0.677068614947/1000.;
+my $kg_in_Msun = (1.0/1.98892)*(10**-30);
+
+#######################
+## Input Parameters  ##
+#######################
+
+#Parameters to change
+my $compact_object1 = "BH";
+my $compact_object2 = "TOV";
+
+my $M_in_Msun       = 4.05;  				# Mass scaling factor in Msun
+my $mq              = 2;               	#mass ratio - $mBH/$mStar;
+my $mStar_Msun      = 1.35; 			#Msun;
+my $rStar_m         = 11650.6211421539;			#Isotropic Radius (in metres)
+my $init_separation_m = 53835.016415344;
+
+
+my $rhoStar_central_kgm3 = 8.34920945724603e+17;
+my $eos_type = "polytrope";
+my $eos_k_Msun = 93.6524453694069;				#in total mass units - Check this value from papaers/books
+my $eos_gamma = 2;	
+
+#From Broyden - Find the values from Broyden
+my $params_from_broyden = 1;	
+my $rhoStar_central_kgm3_br = 9.10113521122565e+17;   #/Mtotal^2 (Msun)
+my $puncmass_Msun_br = 2.6454438;   			# Puncture mass of Black Hole	
+#my $mass_minus_Msun_br = 0.0505132;		 	# Gravitational mass of Star
+my $radius_minus_m_br = 11339.4489576186; 			# Isotropic radius of Star (in units of M)
+
+#Momentum and Velocity (in terms of speed of light):
+my $momentum_from_PN = 1; #0
+
+#Momenta from PN (in Msun units)
+my $P1x_PN = -0.00622516786749;
+my $P1y_PN = 0.373005703819935;
+my $P2x_PN = 0.00622516786749;
+my $P2y_PN = -0.373005703819935;
+my @P1_PN = ( $P1x_PN, $P1y_PN, 0.0);  
+my @P2_PN = ( $P2x_PN, $P2y_PN, 0.0);
+
+#Compute Momenta if not from PN
+my @v_BH = (0.1*$c, 0, 0);
+my @v_Star = (-0.1*$c, 0, 0);
+
+## Dimensionless Spins - Only for BH
+my $a_BH_mag = 0; 
+my $a_BH_theta = 0; 
+my $a_BH_phi = 0;
+
+my $a_Star_mag = 0; 
+my $a_Star_theta = 0; 
+my $a_Star_phi = 0;
+
+
+#Initial Data and Evolution Method
+my $initdata_type = "BowenID";
+my $symmetry = "yes";  			# Not supported with Illinois GRMHD
+my $hydro_code = "Whisky";  # "IllinoisGRMHD";  # "IllinoisGRMHD" or "Whisky"
+
+# Grid parameters
+
+## For now, keep levels inside BH and Star to be same (preferably zero) else you may run into errors 
+my $nlevels_within_star = 0;
+my $nlevels_within_bh = 1;      
+
+my $nlevels_beyond_src = 4;
+my $npoints_rad_star = 40;      #minimum number of points covering the star - can end up to be more 
+my $npoints_rad_bh = 30;      #minimum number of points covering the star - can end up to be more 
+
+# Other parameters
+my $final_time = 800.;
+my $max_runtime = 48*60-15;
+
+my $parfile_name_extra = "long";
+my $checkpoint_walltime = 11.75; 	# Checkpoint every this many hours
+
+my $find_bh3_after_time = 1000;
+
+if ($params_from_broyden eq 0)
+{ $final_time = 0;
+}
+
+#######################
+## Binary Parameters ##
+#######################
+
+
+## Masses (and Radii) ##
+my $mtotal_in_Msun = $mStar_Msun*(1+$mq);    # $mBH_phantom+$mStar: $mStar = 1.4Msun;
+
+my $mtotal_in_M = $mtotal_in_Msun/$M_in_Msun;    # $mBH_phantom+$mStar: $mStar = 1.4Msun;
+my $mBH_phantom = $mtotal_in_M*$mq/(1.+$mq); 	# Keep some non-zero mass around for grid creation/scales
+my $mBH = $mBH_phantom;         	# Remove the BH by setting this to zero (and changing tracker, and removing AHFinder)
+my $mBH_Msun = $mBH*$M_in_Msun; 
+my $rBH = $mBH/2.0;    			# rStar_M
+my $rBH_m = ($mBH_Msun/2.0)/$metre_in_Msun;    	# rStar_Msun
+
+my $mStar = $mBH_phantom/$mq;
+my $rStar_Msun = $rStar_m * ($metre_in_Msun); 
+my $rStar = $rStar_Msun/$M_in_Msun;     # rStar_M
+my $init_separation = $init_separation_m * $metre_in_Msun/$M_in_Msun;
+$init_separation = sprintf("%.4g",$init_separation); 
+
+# Note: For a non-compact star far from the BH, Mbar ~ mStar - Old note
+# Set the bare mass here 
+my $mass_plus = $mBH;
+my $mass_minus = $mStar;
+my $puncmass = $mass_plus;
+
+
+if ($params_from_broyden==1){
+   $puncmass = $puncmass_Msun_br/$M_in_Msun;
+   $rStar =  $radius_minus_m_br*$metre_in_Msun/$M_in_Msun;
+   $rStar_Msun = $rStar*$M_in_Msun;
+   $rStar_m = $rStar_Msun/$metre_in_Msun;
+
+}
+
+## Density and Equation of state parameters - unit conversion ##
+if ($params_from_broyden==1){
+    $rhoStar_central_kgm3 = $rhoStar_central_kgm3_br;
+}
+my $rhoStar_central_Msun = $rhoStar_central_kgm3*$kg_in_Msun/($metre_in_Msun**3);	#in units of msun^-2
+my $rhoStar_central = $rhoStar_central_Msun*$M_in_Msun**2.;			#in units of M^-2
+my $eos_k = $eos_k_Msun*($M_in_Msun**(-2.*($eos_gamma - 1)));
+
+
+# Tidal radius, assuming compactness C=mStar/rStar~0.15, and converting to system mass units
+# This is really in Schwarzschild radii, so change to isotropic.
+
+my $rTidalIso = 2.4*($mq**(-2/3) * ($rStar/$mStar))*$mBH; ## Baumgarte & Shapiro Eq. (17.19)
+my $r_Isco_sch = 6.0*$mBH;
+my $r_Isco_iso = 0.5*($r_Isco_sch - $mBH + $r_Isco_sch*(1.0 - 2.0*$mBH/$r_Isco_sch)**0.5);
+
+my $rTidal = $rTidalIso;
+my $rISCO = $r_Isco_iso;
+
+my $rTidal_within_AH = "no" ;
+if ( $rTidal < $rBH ) {
+    $rTidal_within_AH = "yes";
+}
+
+
+#########################
+### Orbital Parameters ##
+#########################
+
+## Initial Separations ##
+#my $init_separation = 10*$rTidalIso;   #Can be changed, fixed for now
+
+if($init_separation< 1.5*($rBH + $rStar)){
+    die "Star and BH are too close. Please increase the separation"
+}
+
+# Process BH/Star Location Info. Do not place star at 2nd focal point of TP - check if below works!
+my ( $offset_CoM, $offset, $par_b, $xp, $xm );
+
+$offset_CoM = ($init_separation/2.) * ($mq - 1.)/(1.+$mq);
+$par_b  = $init_separation/2.;
+$offset = $offset_CoM;
+$xp     = $init_separation/2. - $offset;
+$xm     = $xp - $init_separation;
+
+## Momenta and Spin Calculation ##
+
+my @P_BH_plus = map { $mass_plus * $_ } @v_BH;
+my @P_Star_minus = map { $mass_minus * $_ } @v_Star;
+if ($momentum_from_PN==1){
+    @P_BH_plus = map{1./$M_in_Msun*$_} @P1_PN;
+    @P_Star_minus = map{1./$M_in_Msun*$_} @P2_PN;
+    @v_BH = map{ 1./$mass_plus*$_} @P_BH_plus;    
+    @v_Star = map{ 1./$mass_minus*$_} @P_Star_minus;    
+}
+
+#BH Spins       
+my $Sx_BH = $a_BH_mag*sin($a_BH_theta)*cos($a_BH_phi)*$mass_plus**2.;
+my $Sy_BH = $a_BH_mag*sin($a_BH_theta)*sin($a_BH_phi)*$mass_plus**2.;
+my $Sz_BH = $a_BH_mag*cos($a_BH_theta)*$mass_plus**2.;
+my @S_BH_plus = ($Sx_BH, $Sy_BH, $Sz_BH);
+
+#Stellar Spins
+my $Sx_Star = $a_Star_mag*sin($a_Star_theta)*cos($a_Star_phi)*$mass_minus**2.;
+my $Sy_Star = $a_Star_mag*sin($a_Star_theta)*sin($a_Star_phi)*$mass_minus**2.;
+my $Sz_Star = $a_Star_mag*cos($a_Star_theta)*$mass_minus**2.;
+my @S_Star_minus = ($Sx_Star, $Sy_Star, $Sz_Star);
+
+# Process above parameters to check and print (a/m)_i
+if ( $mBH > 0 ) {
+   my $magSp = sqrt( $S_BH_plus[0]**2 + $S_BH_plus[1]**2 + $S_BH_plus[2]**2 ); 
+   my $jp = $magSp / ( $mBH**2); 
+   my @S_total = ( (0) x 3 );
+   $S_total[0]=$S_BH_plus[0]+$S_Star_minus[0];
+   $S_total[1]=$S_BH_plus[1]+$S_Star_minus[1];
+   $S_total[2]=$S_BH_plus[2]+$S_Star_minus[2];
+   my $magStot = sqrt( $S_total[0]**2 + $S_total[1]**2 + $S_total[2]**2 );
+   print " |S_BH|  ~= $magSp (j_plus = $jp),   S=($S_BH_plus[0],$S_BH_plus[1],$S_BH_plus[2])\n";
+} else {
+   print " Disabled BH.\n";
+}
+
+####################### CHECK FROM HERE ########################
+   print "BH-NS System:\n";
+   print "     M = $M_in_Msun M_sun (q=$mq).\n";
+   print "     M_BH = $mBH M ($mBH_Msun Msun), M_NS=$mStar M ($mStar_Msun Msun).\n";
+   print "     R_BH(Iso) =  $rBH M($rBH_m m), R_Star = $rStar M ($rStar_m m) \n";
+   print "     Initial separation = $init_separation M\n";
+   print "     x_BH = $xp M, x_NS = $xm M\n";
+   if ( $rTidal_within_AH eq "yes" ) {
+       print "    WARNING: Tidal radius ( $rTidal M ) is within horizon ($rBH M). Separation in terms of horizon radii\n";
+   } else {
+       print "     Tidal radius ~ $rTidal M\n";
+       print "     ISCO radius ~ $rISCO M\n";
+   }
+   print "     p_BH = ($P_BH_plus[0], $P_BH_plus[1]) M, p_Star = ($P_Star_minus[0], $P_Star_minus[1]) M.\n"; 
+   print "     S_BH = ($S_BH_plus[0], $S_BH_plus[1], $S_BH_plus[2]) M, S_Star = ($S_Star_minus[0], $S_Star_minus[1], $S_Star_minus[2]) M.\n"; 
+   print "     Final Time: $final_time M.\n";
+
+   print "\nEquation of State Parameters:\n";
+   print "     rho1_Star = $rhoStar_central /M^2 = $rhoStar_central_Msun/Msun^2\n";
+   print "     Gamma_* = $eos_gamma\n";
+   print "     K_* = $eos_k /M^2 = $eos_k_Msun /Msun^2\n"; 
+
+################
+## Basic Grid ##
+################
+
+# Define finest grid spacing by either M/50 for BH or resolving the star.
+if ($params_from_broyden==0){
+  $npoints_rad_bh = 15;
+  $npoints_rad_star = 30; #25;
+  $nlevels_within_star = 0;
+  $nlevels_beyond_src = 5; 
+}
+
+#To set up the grid, the primary importance if given to the desired resolution of star. Once that is fixed, the refinement size is reduced to meet the requirement of BH resolution
+my $rad_cover_src = 1.2*$rStar; #min(1.2*$rBH, 1.2*$rStar);
+my $h_src = $rStar/$npoints_rad_star;
+my $npts_rad_src = ceil($rad_cover_src/$h_src);
+
+my $extra_BH_levels   = 0; 
+my $extra_Star_levels = $nlevels_within_star;
+
+if ($rBH<$rStar)
+{
+  $extra_BH_levels=int(log($rad_cover_src/$rBH)/log(2));
+}
+
+my $jogbylvl_interior = 0;  	     #skip one level inside source to increase num points covering star - 0/1
+my $jogbylvl_exterior = 1;           # Extend boundaries by factor 2^($jogby) to get higher wavezone resolution
+if ($extra_BH_levels>1)
+{  
+  $jogbylvl_interior=1;
+  $extra_BH_levels=$extra_BH_levels-1;
+}
+if($params_from_broyden eq 0)
+{ 
+  $jogbylvl_exterior=0;
+}
+my $jogby = $jogbylvl_interior + $jogbylvl_exterior;
+my $extra_levels      = max($extra_BH_levels, $extra_Star_levels);  #$extra_BH_levels + $extra_Star_levels;
+
+print "Extra BH levels = $extra_BH_levels\n";
+#while ($rBH/$h_src < $npoints_rad_bh){
+#    $rad_cover_src = $rad_cover_src/2.0;
+#    $h_src = $h_src/2.0 ;
+#    $npts_rad_src = ceil($rad_cover_src/$h_src);
+#}
+my $numlevels_BH3     = 0; 
+my $numlevels_beyond_src = $nlevels_beyond_src;
+my $numlevels = 1 + $extra_levels + $numlevels_beyond_src;
+
+
+my $rfine = $rad_cover_src/2**($extra_levels+$jogbylvl_interior);
+$rfine = sprintf("%.2f",$rfine); 
+my $npts_rad_fine = $npts_rad_src/(2**$jogbylvl_interior);           
+my $move_N_levels = $numlevels-1;    # Move this many levels
+my $impose_grid_fits = "yes";        # Impose that both stacks of moving grids fit well within the coarsest grids
+my $unistep_last_num_grids = 3;
+
+my $num_grid_centres = 3;
+my @levels_centre = ( ($numlevels) x $num_grid_centres );
+$levels_centre[0] = $numlevels-$extra_Star_levels; # $levels -- Usually the heaviest object that needs the most refining
+$levels_centre[1] = $numlevels-$extra_BH_levels;   # $levels-$extra_BH_levels;
+$levels_centre[2] = $numlevels-$move_N_levels+$numlevels_BH3;     # $levels-$move_N_levels;
+
+
+my $spacetime_fd_order = 4;
+my ($ghost_zones, $prolong_order, $diss_order);
+my ($fd_order_param_K2B, $lapse_condition, $shift_condition_par);
+if ( $spacetime_fd_order == 4 ) {
+   $ghost_zones = 3;
+   $prolong_order = 5;
+   $diss_order = 5;
+   $fd_order_param_K2B = "full4th";
+   $lapse_condition = "1 + log full4th";
+   $shift_condition_par = "NASAfull4th";
+   if ( $unistep_last_num_grids < 3 && $numlevels > 5 ) {
+      $unistep_last_num_grids = 3;
+   }
+} elsif ( $spacetime_fd_order == 6 ) {
+   $ghost_zones = 4;
+   $prolong_order = 5;
+   $diss_order = 7;
+   $fd_order_param_K2B = "6th";
+   $lapse_condition = "1 + log 6th";
+   $shift_condition_par = "NASA6th";
+   if ( $unistep_last_num_grids < 5 ) {
+      $unistep_last_num_grids = 5;
+   }
+} else {
+   print "Bad spacetime fd order!\n";
+   die;
+}
+
+my $chiEps = 1e-4;
+
+# Process above options
+my $h = $rfine/$npts_rad_fine;
+my $h0 = sprintf "%.19f", $h * 2**($numlevels-1);
+
+my $fine_dtfac = 0.5;
+my $base_dtfac = $fine_dtfac / 2**($unistep_last_num_grids-1);
+
+#Check from here
+my $joglvls_out_at_interior=($numlevels - $extra_levels);  #0th level is the largest and nth level if the finest
+my $joglvls_out_at_exterior=($numlevels - $move_N_levels+1);  
+#if($params_from_broyden eq 0)
+#{
+#   $joglvls_out_at_exterior=($numlevels - $move_N_levels);  
+#}
+my $finlvl=$numlevels-1;
+my @rlvls = (0 .. $finlvl);
+my @spacing = (0 .. $finlvl);
+my @spacingdM = (0 .. $finlvl);
+my @spacingdMp = (0 .. $finlvl);
+my @spacingdMm = (0 .. $finlvl);
+my @CarpetRegrid2_radii_centre = ( "", "", "" );
+my $Dissipation_per_level_lines = "";
+my $Grid_Description  = "# Grid structure:\n";
+   $Grid_Description .= "#\trl\tRadius\t\tResolution\t\t\t\t\t\t\t\tNpoints across Ref Lvl\n";
+
+
+for ( my $lvl=0; $lvl<$numlevels; $lvl++ )
+{
+      $spacing[$lvl] = $h0 / (2**$lvl);
+      $spacingdM[$lvl] = 1./$spacing[$lvl];
+      $spacingdMp[$lvl] = $mBH_phantom*$spacingdM[$lvl];
+      $spacingdMm[$lvl] = $mStar*$spacingdM[$lvl];
+
+      ## radius of the level 
+      my $lvlexponent = $numlevels - $lvl - 1;
+      my $lvlexp_with_jog_interior = $lvlexponent + $jogbylvl_interior;
+      my $lvlexp_with_jog_exterior = $lvlexponent + $jogby; #lvl_exterior;
+      if ( $lvl<($joglvls_out_at_exterior) ) {
+         $rlvls[$lvl] = $rfine*(2**$lvlexp_with_jog_exterior);
+      } elsif ( $lvl<($joglvls_out_at_interior) ) {
+         $rlvls[$lvl] = $rfine*(2**$lvlexp_with_jog_interior);
+      } else {
+         $rlvls[$lvl] = $rfine*(2**$lvlexponent);
+      }
+      
+      if ( $impose_grid_fits eq "yes" && $lvl < $numlevels-$move_N_levels ) {
+         # Expand if necessary to fit moving centers happily #
+         my $radius_unjogged_center = $rfine*(2**$lvlexponent);
+         my $relevant_radius = max ( ( $rlvls[$lvl], $radius_unjogged_center+abs($xp), $radius_unjogged_center+abs($xm) ) );
+         $rlvls[$lvl] = $spacing[$lvl]*(ceil($relevant_radius/$spacing[$lvl]));
+      }
+
+        ## Grid Infor ##
+        my $add_grid_info = sprintf("#\t%-2d\t%-8g\t%-8g\t(M/%-10.4g",$lvl,$rlvls[$lvl],$spacing[$lvl],$spacingdM[$lvl]);
+        $Grid_Description .= $add_grid_info; 
+        if ( $levels_centre[0]-1 >= $lvl ) {
+           $add_grid_info = sprintf(",\tm1/%-10.4g",$spacingdMp[$lvl]);
+           $Grid_Description .= $add_grid_info;
+        } else {
+           $Grid_Description .= ", ------------- ";
+        }
+        if ( $levels_centre[1]-1 >= $lvl ) {
+           ## Radius-based info 
+           $add_grid_info = sprintf(",\trStar/%-10.4g",$rStar/$spacing[$lvl]);
+           ## Mass-based info 
+           #$add_grid_info = sprintf(",\tm2/%-10.6g",$spacingdMm[$lvl]);
+           $Grid_Description .= $add_grid_info;
+        } else {
+           $Grid_Description .= ", ------------- ";
+        }
+        my $npoints = (2.*$rlvls[$lvl])/$spacing[$lvl];
+        $add_grid_info = sprintf(")\t%4d^3\n",$npoints);
+        $Grid_Description .= $add_grid_info;
+
+        ## Parfile lines for CarpetRegrid2
+        if ( $lvl>0 ) {
+           for ( my $ncentre=1; $ncentre<=$num_grid_centres; $ncentre++ ) {
+               if ( $levels_centre[$ncentre-1] >= ($lvl+1) ) {
+                  $CarpetRegrid2_radii_centre[$ncentre-1].="CarpetRegrid2::radius_$ncentre  [$lvl]  =  $rlvls[$lvl]\n";
+               }
+           }
+        }
+
+        ## Choose dissipation
+        if ( $spacing[$lvl] > 1. ) {
+           $Dissipation_per_level_lines .= "Dissipation::epsdis_for_level[$lvl] = 0.5\n";
+        } else {
+           $Dissipation_per_level_lines .= "Dissipation::epsdis_for_level[$lvl] = 0.1\n";
+        }
+
+
+}
+my $run_description = <<EOF;
+###############################################################
+# Simulation Description                                      #
+###############################################################
+# Code Unit:               1 M = $M_in_Msun Msun
+# Refinement Levels:       $numlevels (Inside = $extra_levels, Outside = $numlevels_beyond_src)
+# Finest Resolution:       $h M
+# Final Time:              $final_time M
+# Initial Separation:	   $init_separation M ($init_separation_m m)
+# Hydrodynamics Evolution: $hydro_code
+# Bitant Symmetry:         $symmetry
+# 
+# BH
+#   Mass:        	       $mBH_Msun Msun = $mBH M
+#   Isotropic Radius:	   $rBH_m metres = $rBH M
+#   Boost Velocity:        ($v_BH[0], $v_BH[1], $v_BH[2])
+#   Boost Momentum:        ($P_BH_plus[0], $P_BH_plus[1], $P_BH_plus[2]) M
+# 
+# Star 2
+#   Mass:        	       $mStar_Msun Msun = $mStar M
+#   Isotropic Radius:	   $rStar_m metres = $rStar M
+#   Tidal Radius:          $rTidal M
+#   ISCO Radius:          $rISCO M
+#   Central Density:       $rhoStar_central_kgm3 kg/m^3= $rhoStar_central 1/M^2
+#   Polytropic K:          $eos_k
+#   Polytropic Gamma:      $eos_gamma
+#   Boost Velocity:        ($v_Star[0], $v_Star[1], $v_Star[2])
+#   Boost Momentum:        ($P_Star_minus[0], $P_Star_minus[1], $P_Star_minus[2]) M
+###############################################################
+EOF
+
+print "\n$Grid_Description\n"; 
+
+## Override rl boundaries here if desired ##
+
+my $n = int($rfine / $h); # (For angular resolution)
+my $m = int($n / 4);   # (For angular resolution and regridding)
+my $ntheta = 20 * $m;
+my $nphi = 2 * $ntheta;
+
+my $regrid_every = $m * 16;
+
+my $timerefs = "1";
+my @reflvl_timefac = ( (1) x $numlevels );
+my $next=0;
+for ( my $lvl=1; $lvl<$numlevels; $lvl++) {
+  if ( $lvl < $unistep_last_num_grids ) {
+     $next = 1;
+  } else {
+     $next = 2**($lvl+1-$unistep_last_num_grids);
+  }
+  $timerefs = "$timerefs,$next";
+  $reflvl_timefac[$lvl] = $next;
+}
+my $every_coarse = $next;		#Number of iterations of finest level which equals one iteration of coarsest level
+#$regrid_every = $every_coarse;
+my @reflvl_freq = ( (1) x $numlevels );
+
+print("Level \t Number of iterations\n");
+for ( my $lvl=0; $lvl<$numlevels; $lvl++)
+{
+        $reflvl_freq[$lvl] = $every_coarse/($reflvl_timefac[$lvl]);
+	print("$lvl \t $reflvl_freq[$lvl]\n");
+}
+
+my $dt = $spacing[$numlevels-1]/2.; #dt/it
+my $every_coarse_t = $every_coarse*$dt;
+my $every_10M = sprintf("%.0f", 10./$every_coarse_t)*$every_coarse;
+my $every_5M = sprintf("%.0f", 5./$every_coarse_t)*$every_coarse;
+my $every_1M = sprintf("%.0f", 1./$every_coarse_t)*$every_coarse;
+
+print "10M = $every_10M iterations \n";
+$regrid_every = max( $m*4, $every_coarse);
+my $track_every =  $regrid_every;   # Why to set this to number of points on finest grid?
+
+
+# Add a logic for Regridding
+my $vBH_mag = sqrt($v_BH[0]**2 + $v_BH[1]**2 + $v_BH[2]**2);
+my $vStar_mag = sqrt($v_Star[0]**2 + $v_Star[1]**2 + $v_Star[2]**2);
+
+#my $boost_velocity = max($vBH_mag, $vStar_mag);
+#if($boost_velocity > 0)
+#{
+#  my $dx_regridding = $vStar_mag*$regrid_every*$dt;
+#  my $allowed_star1_movement = 0.8*($rlvls[$nlevels_beyond_star] - $rplus);
+#  my $allowed_star2_movement = 0.8*($rlvls[$nlevels_beyond_star] - $rminus);
+#  my $allowed_star_movement = min($allowed_star1_movement, $allowed_star2_movement);
+#  if($dx_regridding > $allowed_star_movement)
+#  {
+#    $regrid_every = floor($allowed_star_movement/($boost_velocity*$dt));
+#  }
+#}
+
+################
+## Symmetries ##
+################
+my $reflectx="no";
+my $reflecty="no";
+my $reflectz=$symmetry;
+my $rotate180="no";
+my $rotate90="no";
+
+        # Process the above options
+        my $xmin_shiftout = 0;
+        my $ymin_shiftout = 0;
+        my $zmin_shiftout = 0;
+        my $xmin = -$rlvls[0];
+        my $ymin = -$rlvls[0];
+        my $zmin = -$rlvls[0];
+        my $rotatethorn = "";
+        my $RS = "#";
+        my $gridSym_BS=" ";
+
+        if ($reflectx eq "yes") {
+            $xmin_shiftout = 1;
+            $xmin = 0;
+            $gridSym_BS=$gridSym_BS."x";
+        }
+        if ($reflecty eq "yes") {
+            $ymin_shiftout = 1;
+            $ymin = 0;
+            $gridSym_BS=$gridSym_BS."y";
+        }
+        if ($reflectz eq "yes") {
+            $zmin_shiftout = 1;
+            $zmin = 0;
+            $gridSym_BS=$gridSym_BS."z";
+        }
+        if ($rotate180 eq "yes") {
+            $rotatethorn = "RotatingSymmetry180";
+            $RS = "";
+            # Almost reflectx
+            $xmin = 0;
+            $xmin_shiftout = 1;
+            $gridSym_BS=$gridSym_BS."xr";
+        }
+        if ($rotate90 eq "yes") {
+            $rotatethorn = "RotatingSymmetry90";
+            $RS = "";
+            # Almost reflectx, reflecty
+            $xmin = 0;
+            $xmin_shiftout = 1;
+            $ymin = 0;
+            $ymin_shiftout = 1;
+            $gridSym_BS=$gridSym_BS."xr"; ## Warning: BS currently doesn't support RotatingSymmetry90
+        }
+        if ( $rotate90 eq "yes" && $rotate180 eq "yes" ) { 
+            print "WARNING: Can't activate both RotatingSymmetry90 and RotatingSymmetry180.\n"; 
+            die; 
+        }
+
+
+###################
+## IllinoisGRMHD ##
+###################
+my $neos = 1;
+my $psi6_threshold = 1e5;
+my $damp_lorenz = 0.1;
+my $rho_b_max = 1e2;
+
+################
+## Bowen      ##
+################
+my $psi0_limit = 10; #Deprecated
+my $newton_tol = 1e-12;
+my $zero_epsilon = 1e-6; #1e-3;
+
+my $rho_atmosphere = 1e-10*$rhoStar_central;
+
+my $nn = 1./($eos_gamma - 1.);
+my $kfactor = $eos_k**$nn;
+
+#In units of polytropic constant
+my $rho_atmosphere_dimensionless = $rho_atmosphere * $kfactor; 
+my $rho_central_dimensionless = $rhoStar_central * $kfactor;
+
+my $conformal_density_power = 8;  #Deprecated
+my $rhohat_exponent = 8;
+my $sigma_exponent = 8;
+
+###############################
+## Broyden
+###############################
+## Baum stuff
+my $Baum_parfile_lines = "";
+my $Baum_thorn = "";
+my $Baum_activate_thorns = "";
+
+my $int_rad_plus = 1.2*$rBH;
+my $int_rad_minus = 1.2*$rStar;
+if($params_from_broyden eq 0)
+{
+$Baum_thorn = "Broyden";
+$Baum_activate_thorns = "$Baum_thorn ParameterTools BasicIntegrator"; 
+$Baum_parfile_lines = <<END;
+$Baum_thorn\::integration_radius[0] = $int_rad_plus
+$Baum_thorn\::integration_radius[1] = $int_rad_minus
+$Baum_thorn\::integration_npoints[0] = 80
+$Baum_thorn\::integration_npoints[1] = 80
+$Baum_thorn\::initial_guess[0] = $mBH
+$Baum_thorn\::initial_guess[1] = $rho_central_dimensionless
+$Baum_thorn\::max_iterations = 20
+$Baum_thorn\::tolerance[0] = .000001
+$Baum_thorn\::tolerance[1] = .000001
+$Baum_thorn\::target[0] = $mBH
+$Baum_thorn\::target[1] = $mStar
+$Baum_thorn\::range[0] = .05
+$Baum_thorn\::range[1] = .05
+END
+}
+
+###############################
+## Output Variables          ##
+###############################
+my ($vars_info_output, $vars_0d_output, $vars_1d_output, $vars_2d_output, $vars_3d_output) = ("") x 5;
+
+## Timing information
+$vars_info_output = " Carpet::physical_time_per_hour";
+
+## Spacetime
+$vars_info_output .= " Kranc2BSSNChiMatter::alpha";
+
+## Hydro
+if ($hydro_code  eq 'Whisky')
+{
+    $vars_info_output .= " HydroBase::rho" ;# HydroBase::w_lorentz;
+    $vars_0d_output   .= " HydroBase::eps  HydroBase::rho Whisky::w_lorentz";
+    $vars_1d_output   .= " HydroBase::eps HydroBase::rho Whisky::w_lorentz HydroBase::vel"; 
+    $vars_2d_output   .= " HydroBase::eps HydroBase::rho Whisky::w_lorentz HydroBase::vel";
+}
+else{
+    $vars_info_output .= " HydroBase::rho" ;# HydroBase::w_lorentz;
+    $vars_0d_output   .= " HydroBase::eps  HydroBase::rho HydroBase::w_lorentz";
+    $vars_1d_output   .= " HydroBase::eps HydroBase::rho HydroBase::w_lorentz HydroBase::vel"; 
+    $vars_2d_output   .= " HydroBase::eps HydroBase::rho HydroBase::w_lorentz HydroBase::vel";
+}
+
+
+
+#####################
+## Shift Evolution ##
+#####################
+
+my $shift_condition = "standard bbh";
+my ( $lapseAdvection, $nasaAdvection, $newNASAAdvection, $betatAdvection ); # Advection term toggles
+my ( $gammaDriverLapsePower, $gammaDriverLambda ); # Exponents
+my ( $etaBeta, $chiBeta, $betaDotAlphaFactor ); # other factors
+my $gauge_thorns = "";
+my $ExternalEtaBeta_ParLines="";
+if ( $shift_condition eq "standard bbh" ) {
+
+     $lapseAdvection        = 1;
+     $gammaDriverLambda     = 0;
+     $betaDotAlphaFactor    = 0.75;
+     $etaBeta               = 2;
+     $chiBeta               = 1;
+     $gammaDriverLapsePower = 0;
+     $nasaAdvection         = 1;
+     $newNASAAdvection      = 1;
+     $betatAdvection        = 1;
+
+} elsif ( $shift_condition eq "external etabeta" ) {
+
+     $gauge_thorns = "ExternalEtaBeta";
+     $shift_condition_par = "NASAExternalEtaBeta";
+
+     $lapseAdvection        = 1;
+     $gammaDriverLambda     = 0;
+     $betaDotAlphaFactor    = 0.75;
+     $etaBeta               = 2;
+     $chiBeta               = 1;
+     $gammaDriverLapsePower = 0;
+     $nasaAdvection         = 1;
+     $newNASAAdvection      = 1;
+     $betatAdvection        = 1;
+
+     my $tanhwidth = 12*$spacing[5];
+     my $tanhcutoff = max( ($rlvls[4]+abs($xm), $rlvls[4]+abs($xp) ) ); 
+     $ExternalEtaBeta_ParLines  = <<END;
+ExternalEtaBeta::n                      = 1
+ExternalEtaBeta::w1                     = 0
+ExternalEtaBeta::w2                     = 0
+ExternalEtaBeta::Mplus                  = $mBH_phantom
+ExternalEtaBeta::Mminus                 = 0 #$mStar
+ExternalEtaBeta::surfindex1             = 0
+ExternalEtaBeta::surfindex2             = 1
+ExternalEtaBeta::etaBeta_form           = "polynomial"
+ExternalEtaBeta::rescale_etaBeta        = "yes"
+ExternalEtaBeta::Rcutoff                = $tanhcutoff
+ExternalEtaBeta::sigma                  = $tanhwidth
+#ExternalEtaBeta::etaBeta_group_bound    = "none"
+#ExternalEtaBeta::timelevels            = 1
+#ExternalEtaBeta::rhs_timelevels                = 0
+END
+
+     $vars_0d_output .= " ExternalEtaBeta::etabeta";
+     $vars_1d_output .= " ExternalEtaBeta::etabeta";
+
+} else {
+     print "Shift condition not supported by rpar yet.\n";
+     die;
+  }
+  
+$vars_0d_output .= " Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi";
+$vars_1d_output .= " ADMBase::lapse ADMBase::shift ADMBase::metric  ADMBase::curv Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi ";
+$vars_2d_output .= " ADMBase::lapse ADMBase::shift Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi";
+
+##########################
+### Analysis Parameters ##
+##########################
+## Toggle Analysis Tools by adding thorns here ##
+##   Supported via this toggle: AHFinderDirect, IHSpin, Ylm_Decomp, WeylScal4,
+##                              Outflow, TotalRestMass, Bremsstrahlung, Synchrotron
+my $analysis_thorns= "WeylScal4 Ylm_Decomp AHFinderDirect IHSpin ADM_EJP Outflow Psi4Analysis"; #SphereRad TotalRestMass
+if ($params_from_broyden eq 0)
+{
+   $analysis_thorns = "AHFinderDirect";
+}
+
+## Integration Volumes & Frequencies for                     ##
+## TotalRestMass / Bremsstrahlung / Synchrotron / Outflow ##
+# Surface 1 - around remnant black hole
+# Surface 2 - Covering initial black hole
+# Surface 3 - Outside the star
+# Surface 4 - Far outside the grid
+my @integration_radii = (1.5, 1.2*($xp + $mBH), 1.2*($init_separation + $rStar), 2*$init_separation);  #( 1.5*$rStar,$init_separation/2., 2.*$rStar+ abs($xm), 1.5*$init_separation );
+my @extra_Masks = ( "CarpetReduce::weight" );      ## AHMask assumed, other options are buffered masks
+my $freq_intvol = $every_coarse;           ## Safe default is every coarse
+my $intvols = scalar(@integration_radii);  ## Number of integration volumes 
+my $nMasks = scalar(@extra_Masks);         ## Number extra masks to integrate one volume with
+my $num_integrations = $intvols + $nMasks;
+
+
+## Horizon and AH information needed for surfaces   ##
+my $AH_number = 1;
+my @ah_masses = ($mBH, 1);
+my $do_ah_buffer = "no";
+my $number_trackers = 2;   #ShiftTracker and Mintracker
+my @ah_radii = ();
+for ( my $nHorizon=0; $nHorizon<$AH_number; $nHorizon++ ) {
+    $ah_radii[$nHorizon] = 0.7*$ah_masses[$nHorizon];
+}
+
+## Spherical Surfaces, Resolutions                  ##
+my $ah_res_theta = 120;
+my $ah_res_phi = 100;
+my $int_outerbdy_theta = 120;
+my $int_outerbdy_phi = 90;
+my $spin_res_theta = 120;
+my $spin_res_phi = 40;
+my @theta_resolutions = ( $int_outerbdy_theta, $spin_res_theta, $ah_res_theta );
+my @phi_resolutions = ( $int_outerbdy_phi, $spin_res_phi, $ah_res_phi );
+my $SS_maxtheta = max @theta_resolutions;
+my $SS_maxphi = max @phi_resolutions;
+
+## Spherical Surface: Assign surface indices & Setup Surface if necessary                 ##
+## Assign and Setup Spherical Surfaces for ShiftTracker(BH) and MinTracker(Star)
+my $star_tracker_radii = sprintf("%0.6g",$rStar*3);
+my $surf_num_count = 0;
+my @surfnum_tracker = ();
+#my @trackersurf_radii = ($rBH+0.5, $star_tracker_radii);
+my $Tracker_Surface_Resolution_lines = "## Surfaces for Tracking Binary ##\n";
+for ( my $nTracker=0; $nTracker < $number_trackers; $nTracker++ ) {
+#Do not add non-zero radius, theta and phi points on spherical surface for trackers as it creates problems with ShiftTracker and CarpetTracker for BH case - ShiftTracker is support to follow a single point hence radius is 0 (default value)
+    $surfnum_tracker[$nTracker]=$surf_num_count;
+#    $Tracker_Surface_Resolution_lines .= "SphericalSurface::set_spherical[$surf_num_count] = \"yes\"\n";
+#    $Tracker_Surface_Resolution_lines .= "SphericalSurface::ntheta[$surf_num_count]        = $ah_res_theta\n";
+#    $Tracker_Surface_Resolution_lines .= "SphericalSurface::nphi[$surf_num_count]          = $ah_res_phi\n";
+#    $Tracker_Surface_Resolution_lines .= "SphericalSurface::radius[$surf_num_count]        = $trackersurf_radii[$nTracker]\n\n";
+    $surf_num_count++;
+}
+
+## Assign and Setup Spherical Surfaces for AHFinderDirect
+my @surfnum_ahs = ();
+my $AH_Surface_Resolution_lines = "## Apparent Horizons ##\n";
+for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+    $surfnum_ahs[$nHorizon] = $surf_num_count;
+    $AH_Surface_Resolution_lines .= "SphericalSurface::ntheta[$surf_num_count]    = $ah_res_theta\n";
+    $AH_Surface_Resolution_lines .= "SphericalSurface::nphi[$surf_num_count]      = $ah_res_phi\n\n";
+    $surf_num_count++;
+}
+
+## Setup Spherical Surface for IHSpin and SphereRad
+my @surfnum_sphererad = (); ## One for each AH, used to double-up spin calc ##
+my $Spin_Surface_Resolution_lines = "## Surfaces for IHSpin (spins 1 is AH) ##\n";
+my  $SphereRad_parfile_lines = " ";
+#   $SphereRad_parfile_lines .= "SphereRad::max_nsurface           = $AH_number\n";
+#   $SphereRad_parfile_lines .= "SphereRad::verbose                = 0\n";
+my @SphereRad_radii = ();
+#for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+#    $surfnum_sphererad[$nHorizon] = $surf_num_count;
+#    $Spin_Surface_Resolution_lines .= "SphericalSurface::ntheta[$surf_num_count]    = $spin_res_theta\n";
+#    $Spin_Surface_Resolution_lines .= "SphericalSurface::nphi[$surf_num_count]      = $spin_res_phi\n\n";
+
+#    $SphereRad_radii[$nHorizon] = $ah_radii[$nHorizon];
+#    $SphereRad_parfile_lines .= "SphereRad::surface_index[$nHorizon]       = $surf_num_count\n";
+#    $SphereRad_parfile_lines .= "SphereRad::shifttracker_index[$nHorizon]  = $surfnum_tracker[$nHorizon]\n";
+#    $SphereRad_parfile_lines .= "SphereRad::mass[$nHorizon]                = $ah_masses[$nHorizon]\n";
+#    $SphereRad_parfile_lines .= "SphereRad::radius_surface[$nHorizon]      = $SphereRad_radii[$nHorizon]\n";
+
+#    $surf_num_count++;
+#}
+        
+
+## Setup Spherical surface for Volume Integration and Flux Computation 
+my @surfnum_intvolumes = ();
+my $Integration_Volume_Surface_Resolution_lines = "## Surfaces for Volume Integration and Fluxes ##\n";
+
+for ( my $nIntvolume=0; $nIntvolume < $intvols; $nIntvolume++ ) {
+    $surfnum_intvolumes[$nIntvolume] = $surf_num_count;
+    $Integration_Volume_Surface_Resolution_lines .= "SphericalSurface::set_spherical[$surf_num_count] = \"yes\"\n";
+    $Integration_Volume_Surface_Resolution_lines .= "SphericalSurface::ntheta[$surf_num_count]        = $int_outerbdy_theta\n";
+    $Integration_Volume_Surface_Resolution_lines .= "SphericalSurface::nphi[$surf_num_count]          = $int_outerbdy_phi\n";
+    $Integration_Volume_Surface_Resolution_lines .= "SphericalSurface::radius[$surf_num_count]        = $integration_radii[$nIntvolume]\n\n";
+    $surf_num_count++;
+}
+
+my $number_surfs_total = $surf_num_count; # 1 + 2*$AH_number + $SphereRad_dets + $intvols;
+
+#### Analysis Thorn: AHFinderDirect ####
+## It's alright to have more than $AH_number in these arrays ##
+my @AH_radius_initial = ( $mass_plus/2. ,  ($mass_plus+$mass_minus)/2. );
+my @AH_x_initial = ( $xp,  0. ); 
+my @AH_y_initial = ( 0, 0 );
+my @AH_z_initial = ( 0, 0 );
+my @start_ah_times = ( 0,  0 ); 
+my @stop_ah_times = ( 1e10, 1e10 );
+my $AH_find_every = 1; ## Implemented 
+
+## AHFinder detector frequency given the current grid structure
+#@AH_det_rad = ( $AH_radius_initial[0], $AH_radius_initial[1], $AH_radius_initial[2] ); #This was too coarse
+
+my $estimated_AH_growth_factor = 2;
+my $AH_maxrad = 4*$mBH_phantom ;
+my @AH_calc_freq = ( ($AH_find_every) x $AH_number );
+for ( my $lvl=0; $lvl<$numlevels; $lvl++ ) {
+    for ( my $hn=0; $hn<$AH_number; $hn++ ) {
+        if ( $estimated_AH_growth_factor * $AH_radius_initial[$hn] < ($rlvls[$lvl] - 4*$spacing[$lvl]) ) {
+           $AH_calc_freq[$hn] = $reflvl_freq[$lvl];
+        }
+    }       
+}
+$AH_find_every = max @AH_calc_freq;
+my $AH_horizon_h_output = 256*$AH_find_every;
+
+## Information for buffered AH mask ##
+my $maskbufferXi = 1.86602540378444;         # r_iso(r_sch=3M) / r_iso(r_sch=2M) from Farris et al.
+my @buffered_ah_freq = ( @AH_calc_freq ); 
+if ( $do_ah_buffer eq "yes" ) {
+   for ( my $lvl=$numlevels-1; $lvl>=0; $lvl-- ) {
+        for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+            if ( $maskbufferXi*$ah_masses[$nHorizon] > ( $rlvls[$lvl]-2*$spacing[$lvl]) ) {
+               $buffered_ah_freq[$nHorizon] *= 2;
+            } 
+        }
+   }
+}
+
+my $AHFinder_parfile_lines = "";
+if ( $analysis_thorns =~ m/ahfinderdirect/i ) {
+    $AHFinder_parfile_lines = <<END;
+
+AHFinderDirect::find_every = $AH_find_every
+AHFinderDirect::N_horizons = $AH_number
+AHFinderDirect::output_h_every = $AH_horizon_h_output
+AHFinderDirect::move_origins = "yes"
+AHFinderDirect::verbose_level = "physics highlights"
+
+#AHFinderDirect::set_mask_for_all_horizons = "yes"
+#AHFinderDirect::set_new_style_mask = "yes"
+#AHFinderDirect::mask_is_noshrink = "no"
+#
+#AHFinderDirect::mask_radius_offset = 0
+#AHFinderDirect::mask_buffer_thickness = 0
+#AHFinderDirect::mask_radius_multiplier = 1.0
+
+END
+
+for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+    my $ah_index = $nHorizon + 1;
+    $AHFinder_parfile_lines .= "AHFinderDirect::origin_x[$ah_index] = $AH_x_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::origin_y[$ah_index] = $AH_y_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::origin_z[$ah_index] = $AH_z_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::initial_guess__coord_sphere__x_center[$ah_index] = $AH_x_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::initial_guess__coord_sphere__y_center[$ah_index] = $AH_y_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::initial_guess__coord_sphere__z_center[$ah_index] = $AH_z_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::initial_guess__coord_sphere__radius[$ah_index]   = $AH_radius_initial[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::which_surface_to_store_info[$ah_index]   = $surfnum_ahs[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::max_allowable_horizon_radius[$ah_index]   = $AH_maxrad\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::reset_horizon_after_not_finding[$ah_index]   = \"no\"\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::find_after_individual_time[$ah_index]        = $start_ah_times[$nHorizon]\n";
+    $AHFinder_parfile_lines .= "AHFinderDirect::dont_find_after_individual_time[$ah_index]   = $stop_ah_times[$nHorizon]\n\n";
+}
+END
+}
+
+#### Analysis Thorn: IHSpin ####
+
+my $IHSpin_dets = scalar( @surfnum_ahs ) + scalar( @surfnum_sphererad ); # ~ 2*$AH_number ... 1 uses AH, 1 IHSpins
+my @IHSpin_surfaces = ( @surfnum_ahs, @surfnum_sphererad );
+my @IHSpin_radii = ( @ah_radii, @SphereRad_radii );
+
+## IHSpin must be calculated no more often than the most sporadic AH 
+my $IHSpin_find_all = 16; # Find every $IHSpin_find_all times less often than it could be
+my @IHSpin_find_every = ( ($IHSpin_find_all) x $IHSpin_dets );
+for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+    $IHSpin_find_every[$nHorizon] *= $AH_calc_freq[$nHorizon];
+} 
+for ( my $det=$AH_number; $det<$IHSpin_dets; $det++ )
+{
+    for ( my $lvl=0; $lvl<$numlevels; $lvl++)
+    {
+        if ( $IHSpin_radii[$det] < ($rlvls[$lvl]-$spacing[$lvl]) ) {
+           $IHSpin_find_every[$det] = $reflvl_freq[$lvl] * $IHSpin_find_all;
+        }
+    }
+}
+$IHSpin_find_all = max @IHSpin_find_every;
+
+my $IHSpin_parfile_lines = "";
+if ( $analysis_thorns =~ m/IHSpin/i ) {
+
+   $IHSpin_parfile_lines  = "IHSpin::compute_every          = $IHSpin_find_all\n";
+   $IHSpin_parfile_lines .= "IHSpin::num_horizons           = $IHSpin_dets\n";
+   for ( my $nSpinDet=0; $nSpinDet < $IHSpin_dets; $nSpinDet++ ) {
+       $IHSpin_parfile_lines .= "IHSpin::surface_index[$nSpinDet]                  = $IHSpin_surfaces[$nSpinDet]\n";
+       $IHSpin_parfile_lines .= "IHSpin::compute_every_individual[$nSpinDet]       = $IHSpin_find_every[$nSpinDet]\n";
+   }
+   $IHSpin_parfile_lines .= "IHSpin::interpolator_name      = \"Lagrange polynomial interpolation\"\n";
+   $IHSpin_parfile_lines .= "IHSpin::interpolator_pars      = \"order=4\"\n";
+   $IHSpin_parfile_lines .= "IHSpin::verbose                = 0\n\n";
+
+}
+
+
+#### Analysis Thorn: TotalRestMass ####
+my $TotalRestMass_radii = "TotalRestMass::intvolumes          = $num_integrations\n";
+for ( my $intvol=0; $intvol < $intvols; $intvol++ ) {
+    $TotalRestMass_radii .= "TotalRestMass::int_wi_rad[$intvol]      = $integration_radii[$intvol]\n"; 
+    $TotalRestMass_radii .= "TotalRestMass::centre_x[$intvol]        = $xm\n";
+}
+for ( my $nMask=0; $nMask < $nMasks; $nMask++ ) {
+    my $mask_num = $intvols + $nMask;
+    $TotalRestMass_radii .= "\nTotalRestMass::int_wi_rad[$mask_num]     = $integration_radii[0]\n"; 
+    $TotalRestMass_radii .=   "TotalRestMass::weight_var[$mask_num]     = \"$extra_Masks[$nMask]\"\n";
+    $TotalRestMass_radii .=   "TotalRestMass::centre_x[$mask_num]       = $xm\n";
+}
+
+my $dDdt_var = "";
+my $mol_register_tmunu = "";
+if ($hydro_code eq "Whisky")
+{
+  $dDdt_var = "Whisky::densrhs";
+  $mol_register_tmunu = "yes";
+} elsif ($hydro_code eq "GRHydro")
+{
+  $dDdt_var = "GRHydro::densrhs";           
+  $mol_register_tmunu = "yes";
+} elsif ($hydro_code eq "IllinoisGRMHD")
+{
+  $dDdt_var = "IllinoisGRMHD::rho_star_rhs";
+  $mol_register_tmunu = "no";
+}
+
+my $TotalRestMass_parfile_lines = "";
+if ( $analysis_thorns =~ m/TotalRestMass/i ) {
+    $TotalRestMass_parfile_lines  = "TotalRestMass::calc_mass_every       = $freq_intvol\n";
+    $TotalRestMass_parfile_lines  = "TotalRestMass::dDdt_variable         = \"$dDdt_var\"\n";
+    $TotalRestMass_parfile_lines .= "TotalRestMass::rho_min               = $rho_atmosphere \n";
+    $TotalRestMass_parfile_lines .= "$TotalRestMass_radii\n";
+}
+
+#### Analysis Thorn: Ylm_Decomp ####
+my $GW_dets = 10;               
+my @GW_det_radii = ( (1) x $GW_dets );
+my @GW_det_freq = ( (1) x $GW_dets );
+my $min_GW_radius = 50*$mtotal_in_M ;
+my $Ylm_Decomp_detector_radii = "";
+my $Ylm_Decomp_detector_frequencies = "";
+for ( my $det_GW=0; $det_GW<$GW_dets; $det_GW++ )
+{
+    $GW_det_radii[$det_GW] = floor($min_GW_radius + $det_GW*10.*$mtotal_in_M);
+    if ( $GW_det_radii[$det_GW] > $rlvls[0]-10. ) {
+       $GW_dets = $det_GW;
+    } else {
+       $Ylm_Decomp_detector_radii .= "Ylm_Decomp::detector_radius[$det_GW]       = $GW_det_radii[$det_GW]\n";
+    }
+}
+for ( my $det_GW=0; $det_GW<$GW_dets; $det_GW++ )
+{
+    for ( my $lvl=0; $lvl<$numlevels; $lvl++)
+    {
+        if ( $GW_det_radii[$det_GW] < ($rlvls[$lvl]-$spacing[$lvl]) ) {
+           $GW_det_freq[$det_GW] = $reflvl_freq[$lvl];
+        }
+    }
+    $Ylm_Decomp_detector_frequencies .= "Ylm_Decomp::out_every_det[$det_GW]         = $GW_det_freq[$det_GW]\n";
+}
+
+my $Ylm_Decomp_parfile_lines = "";
+if ( $analysis_thorns =~ m/ylm_decomp/i ) {
+
+   $Ylm_Decomp_parfile_lines = <<END;
+Ylm_Decomp::distribute_spheres       = "yes"
+Ylm_Decomp::number_of_detectors      = $GW_dets
+
+$Ylm_Decomp_detector_radii
+$Ylm_Decomp_detector_frequencies
+
+Ylm_Decomp::gridfunctions            = "WeylScal4::Psi4r{sw=-2 cmplx='WeylScal4::Psi4i'}"
+Ylm_Decomp::verbose                  = 0
+Ylm_Decomp::l_mode                   = 8
+Ylm_Decomp::m_mode                   = 8
+Ylm_Decomp::interpolation_operator   = "Lagrange polynomial interpolation"
+Ylm_Decomp::interpolation_order      = 4
+Ylm_Decomp::ntheta                   = $ntheta
+Ylm_Decomp::nphi                     = $nphi
+END
+
+        }
+        
+#### Analysis Thorn: WeylScal4 ####
+my $WeylScal4_parfile_lines = "";
+if ( $analysis_thorns =~ m/weylscal4/i ) {
+   $WeylScal4_parfile_lines .= "WeylScal4::offset                    = 1e-8\n";
+   $WeylScal4_parfile_lines .= "WeylScal4::fd_order                  = \"4th\"\n";
+   $WeylScal4_parfile_lines .= "WeylScal4::verbose                   = 0\n";
+}
+
+#### Analysis Thorn: Psi4Analysis ####
+$GW_dets = 10;               
+@GW_det_radii = ( (1) x $GW_dets );
+@GW_det_freq = ( (1) x $GW_dets );
+$min_GW_radius = 50*$mtotal_in_M ;
+my $Psi4Analysis_detector_radii = "";
+my $Psi4Analysis_detector_frequencies = "";
+for ( my $det_GW=0; $det_GW<$GW_dets; $det_GW++ )
+{
+    $GW_det_radii[$det_GW] = floor($min_GW_radius + $det_GW*10.*$mtotal_in_M);
+    if ( $GW_det_radii[$det_GW] > $rlvls[0]-10. ) {
+       $GW_dets = $det_GW;
+    } else {
+       $Psi4Analysis_detector_radii .= "Psi4Analysis::detector_radius[$det_GW]       = $GW_det_radii[$det_GW]\n";
+    }
+}
+for ( my $det_GW=0; $det_GW<$GW_dets; $det_GW++ )
+{
+    for ( my $lvl=0; $lvl<$numlevels; $lvl++)
+    {
+        if ( $GW_det_radii[$det_GW] < ($rlvls[$lvl]-$spacing[$lvl]) ) {
+           $GW_det_freq[$det_GW] = $reflvl_freq[$lvl];
+        }
+    }
+    $Psi4Analysis_detector_frequencies .= "Psi4Analysis::out_every_det[$det_GW]         = $GW_det_freq[$det_GW]\n";
+}
+
+my $Psi4Analysis_parfile_lines = "";
+if ( $analysis_thorns =~ m/psi4analysis/i ) {
+
+   $Psi4Analysis_parfile_lines = <<END;
+Psi4Analysis::out_offset       	       = 0
+Psi4Analysis::number_of_detectors      = $GW_dets
+
+$Psi4Analysis_detector_radii
+$Psi4Analysis_detector_frequencies
+
+Psi4Analysis::interpolator_name   = "Lagrange polynomial interpolation"
+Psi4Analysis::interpolator_pars      = "order=4"
+Psi4Analysis::maxntheta                   = $ntheta
+Psi4Analysis::maxnphi                     = $nphi
+END
+
+        }
+####### Analysis Thorn: Outflow ####
+my @outflow_surfaces = ( @surfnum_ahs, @surfnum_intvolumes );
+my $outflow_2dout = "no";
+my $outflow_surface_variables = "HydroBase::eps HydroBase::rho";
+my @outflow_wlorentz_thresholds = (); # ( 1.15, 1.25, 1.5, 1.2 ) 
+
+if ( $do_ah_buffer eq "yes" ) {
+   ## Buffered fluxes come inbetween
+   @outflow_surfaces = ( @surfnum_ahs, @surfnum_ahs, @surfnum_intvolumes );
+}
+my $outflow_dets = scalar( @outflow_surfaces );
+my $num_outflow_thresholds = scalar( @outflow_wlorentz_thresholds );
+
+my $Outflow_parfile_lines = "";
+if ( $analysis_thorns =~ m/outflow/i ) {
+
+   $Outflow_parfile_lines .= "Outflow::compute_every            = $AH_find_every\n";
+   $Outflow_parfile_lines .= "Outflow::num_detectors            = $outflow_dets\n";
+   $Outflow_parfile_lines .= "Outflow::interpolator_name        = \"Lagrange polynomial interpolation\"\n";
+   $Outflow_parfile_lines .= "Outflow::interpolator_pars        = \"order=4\"\n";
+   $Outflow_parfile_lines .= "Outflow::verbose                  = 0\n\n";
+
+   my $of_surf_count=0;
+   ## Fluxes across Horizons ##
+   $Outflow_parfile_lines .= "# AH Fluxes\n";
+   for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+       $Outflow_parfile_lines .= "Outflow::surface_index[$of_surf_count]       =  $outflow_surfaces[$of_surf_count]\n";
+       $Outflow_parfile_lines .= "Outflow::compute_every_det[$of_surf_count]   =  $AH_calc_freq[$nHorizon]\n\n";
+       $of_surf_count++;
+   } 
+
+   ## Fluxes across buffered horizons ## 
+   if ( $do_ah_buffer eq "yes" ) {
+      $Outflow_parfile_lines .= "# AH Fluxes, Buffered radii\n";
+      for ( my $nHorizon=0; $nHorizon < $AH_number; $nHorizon++ ) {
+          $Outflow_parfile_lines .= "Outflow::surface_index[$of_surf_count]       =  $outflow_surfaces[$of_surf_count]\n";
+          $Outflow_parfile_lines .= "Outflow::rad_rescale[$of_surf_count]         =  $maskbufferXi\n";
+          $Outflow_parfile_lines .= "Outflow::compute_every_det[$of_surf_count]   =  $buffered_ah_freq[$nHorizon]\n\n";
+          $of_surf_count++;   
+      }
+   }
+
+   
+   $Outflow_parfile_lines .= "# Integration Volume Boundary Fluxes\n";
+   for ( my $nIntvolume=0; $nIntvolume < $intvols; $nIntvolume++ ) {
+       $Outflow_parfile_lines .= "Outflow::surface_index[$of_surf_count]       =  $outflow_surfaces[$of_surf_count]\n";
+       $Outflow_parfile_lines .= "Outflow::compute_every_det[$of_surf_count]   =  $freq_intvol\n\n";
+       $of_surf_count++;   
+   }
+
+   if ( $of_surf_count != $outflow_dets ) {
+      print "WARNING! Surface counts are inconsistent in Outflow's parameters. Aborting.\n";
+      die;
+   }
+
+   ## Surface output ##
+   $Outflow_parfile_lines .= "Outflow::output_2d_data           = \"$outflow_2dout\"\n";
+   $Outflow_parfile_lines .= "Outflow::extra_variables          = \"$outflow_surface_variables\"\n\n";
+
+   ## Threshold info ##
+   $Outflow_parfile_lines .= "Outflow::num_thresholds           = $num_outflow_thresholds\n";
+   for ( my $nThreshold=0; $nThreshold < $num_outflow_thresholds; $nThreshold++ ) {
+       $Outflow_parfile_lines .= "Outflow::threshold[$nThreshold]   = $outflow_wlorentz_thresholds[$nThreshold]\n";
+   }
+   
+}
+#### Analysis Thorn: ADM_EJP ####
+my $num_adm_radii = 4;
+my $min_adm_radius = 3*$rStar+$init_separation;
+my $ADMEJP_parfile_lines = "";
+if ( $analysis_thorns =~ m/ADM_EJP/i ) {
+my $dr=( $rlvls[0] - $min_adm_radius )/($num_adm_radii+2); # Don't quite go out to the physical boundary
+$ADMEJP_parfile_lines .= "ADM_EJP::number_of_detectors   = $num_adm_radii\n";
+$ADMEJP_parfile_lines .= "ADM_EJP::out_every             = $every_coarse\n";
+for ( my $adm_radius=0; $adm_radius < $num_adm_radii; $adm_radius++ ) {
+     my $rdet = $min_adm_radius + $adm_radius*$dr;
+     $ADMEJP_parfile_lines .= "ADM_EJP::detector_radius[$adm_radius]   = $rdet\n";
+}
+$ADMEJP_parfile_lines .= "ADM_EJP::interpolator_name        = \"Lagrange polynomial interpolation\"\n";
+$ADMEJP_parfile_lines .= "ADM_EJP::interpolator_pars        = \"order=4\"\n";
+$ADMEJP_parfile_lines .= "ADM_EJP::ntheta                   = 120\n";
+$ADMEJP_parfile_lines .= "ADM_EJP::nphi                     = 240\n";
+}
+#######################
+## Comoving Surfaces ##
+#######################
+my ($csurf_parfile_lines, $csurf_thorns);
+$csurf_parfile_lines = "";
+$csurf_thorns = "";
+
+#######################
+## Output Parameters ##
+#######################
+
+my $out_info_every = 2;
+my $out_1d_every = 16*$every_5M;	#coarse;
+my $out_2d_every = $every_5M;
+my $out_3d_every = 0;
+
+#################################
+## Filenames (Chkpt, End .par) ##
+#################################
+my $chkptdir="checkpoints";
+my $checkpt_terminate="yes";
+if ($params_from_broyden eq 0){
+   $checkpt_terminate="no";
+}
+my $sep_round = sprintf("%.1f",$init_separation*$M_in_Msun/$metre_in_Msun/1000);
+my $rBH_round = sprintf("%.1f",$rBH_m/1000);
+my $rStar_round = sprintf("%.1f",$rStar_m/1000);
+my $res_finest = sprintf("%0.1f",$spacingdM[$numlevels-1]);
+my $filename = "";
+if ($params_from_broyden eq 0){
+   $filename ="NSBH_D".$sep_round."_q".$mq."_rBH_".$rBH_round."_rStar_".$rStar_round."_M".$res_finest."_Broyden_C19.par";
+} else
+{
+   $filename ="NSBH_D".$sep_round."_q".$mq."_rBH_".$rBH_round."_rStar_".$rStar_round."_M".$res_finest.".par";
+}
+print "Filename = $filename \n";
+#####################################
+## Rough Estimate of Memory Needed ##
+#####################################
+my $gp=0;	#gridpoints
+my $num_gfs = 448; ## Hydro
+for ( my $lvl=0; $lvl<$numlevels; $lvl++ )
+{
+     $gp += ( (2*$rlvls[$lvl]/$spacing[$lvl]) + $ghost_zones*4 )**3;
+}
+my $bits_to_bytes = 0.125; my $bits_per_double=64;
+my $memtot = sprintf( "%.2f", ($gp * $num_gfs) * $bits_per_double * $bits_to_bytes * 1e-6);
+my $domain_factor = 1;
+if ( $rotate180 eq "yes" ) { $domain_factor *= 0.5; }
+if ( $reflectx eq "yes" )  { $domain_factor *= 0.5; }
+if ( $reflecty eq "yes" )  { $domain_factor *= 0.5; }
+if ( $reflectz eq "yes" )  { $domain_factor *= 0.5; }
+#BK Comment -  Correction in denominator - 400 MB changed to 4000 MB (memory in 1 core)
+my $numcores = $domain_factor * ($memtot / (4000));
+print "Total Memory Estimate: $memtot MB ( Estimate ~$numcores cores for $domain_factor of full domain. )\n";
+
+
+##########################################
+##            Initial Data		##
+##########################################
+
+########### Two Punctures ############
+
+#Resetting punctures s.t. first puncture lies on black hole while second is on boundary of NS
+
+my $par_b_modified = ($xp - $xm - $rStar)/2.0;
+my $offset_modified = -1.*($xp + $xm + $rStar)/2.0;
+
+#my $hydrocode = "";
+#if($params_from_broyden eq 0)
+#{
+#  $hydro_code="Whisky";
+#}
+
+my $initdata_method = $initdata_type; #"BowenID"/"Lorene" 
+
+
+## First specify which thorns to activate depending on choice of method
+my ($initialdata_thorns, $initialdata_lines, $hydro_lines, $hydro_thorns, $symmetry_line, $calc_initdata_lines, $hydrobase_initialhydro, $primsol_lines) = "";
+
+# Hydro Evolution Thorns
+if ($hydro_code eq "IllinoisGRMHD"){
+    $hydro_thorns= <<EOF;
+ActiveThorns = "EOS_IdealFluid EOS_Polytrope IllinoisGRMHD Convert_To_HydroBase MinSearch ID_converter_ILGRMHD EOS_Omni"  
+EOF
+}
+elsif ($hydro_code eq "GRHydro"){
+    $hydro_thorns= <<EOF;
+ActiveThorns = "EOS_IdealFluid EOS_Polytrope GRHydro MinSearch EOS_Omni"
+EOF
+}
+elsif ($hydro_code eq "Whisky"){
+    $hydro_thorns= <<EOF;
+ActiveThorns = "EOS_IdealFluid EOS_Polytrope MinSearch Whisky RiemannSolverMarquina ReconstructPPM RecoverMarti"
+EOF
+}
+else{
+    print("Hydro Code not found in the description. Please check the code name else modify the rpar file.");
+    die;
+}
+
+
+##Spacetime Initial data thorns
+
+my $primsol_thorn = "";
+if ($hydro_code eq "Whisky"){
+    $primsol_thorn =  "PrimitiveSolver";  #Has Whisky dependencies
+} else {
+    $primsol_thorn = "PrimitiveSolverHydroBase";  #Decoupled from Whisky
+}
+
+$hydrobase_initialhydro = $primsol_thorn;
+
+if ($initdata_method eq "BowenID"){
+    $initialdata_thorns =  <<EOF;
+ActiveThorns = "$primsol_thorn $Baum_activate_thorns BowenID TwoPuncturesSolver VectorAlgebra OutputTable"
+EOF
+}  elsif ($initdata_method eq "Lorene"){
+print("LORENE ID parameters currently not added to rpar. Please update the rpar to use with LORENE initial data.");
+die;
+} else{
+print("Initial Data method not identified. Please update the rpar to use with LORENE initial data.");
+die;
+}
+
+## Add lines of Primitive Solver 
+
+$primsol_lines =<<EOF;
+$primsol_thorn\::chiEps = $chiEps
+$primsol_thorn\::testsuite = "yes"
+$primsol_thorn\::conformal_density_power = $conformal_density_power
+$primsol_thorn\::verbose = 1
+EOF
+
+if ($primsol_thorn eq "PrimitiveSolverHydroBase")
+{  $primsol_lines.= "$primsol_thorn\::PrimitiveSolver_rho_abs_min = $rho_atmosphere";
+}
+##Small Modifications to parameters:
+if ($compact_object1 eq "BH"){
+    $compact_object1 = "black hole";
+}
+
+if ($initdata_type eq "BowenID")
+{ 
+    $calc_initdata_lines =<<EOF;
+
+ADMBase::metric_type = "physical"
+ADMMacros::spatial_order = 4
+
+ADMBase::initial_data = "twopuncturessolver"
+ADMBase::initial_lapse = "utb"
+ADMBase::initial_shift = "zero"
+ADMBase::initial_dtlapse = "zero"
+ADMBase::initial_dtshift = "zero"
+ADMBase::lapse_timelevels = 3
+ADMBase::shift_timelevels = 3
+ADMBase::metric_timelevels = 3
+
+$primsol_lines
+
+TwoPuncturesSolver::npoints_A = 32
+TwoPuncturesSolver::npoints_B = 32
+TwoPuncturesSolver::use_full_transform = "yes"
+TwoPuncturesSolver::par_b = $par_b
+TwoPuncturesSolver::move_origin_x = $offset
+TwoPuncturesSolver::grid_setup_method = "evaluation"
+TwoPuncturesSolver::keep_u_around = "yes"
+TwoPuncturesSolver::Newton_tol = $newton_tol
+TwoPuncturesSolver::psi0_limit = $psi0_limit
+TwoPuncturesSolver::conformal_density_power = $conformal_density_power
+
+BowenID::verbose = 1
+BowenID::testsuite = "yes"
+BowenID::rhohat_exponent = $rhohat_exponent
+BowenID::sigma_exponent = $sigma_exponent
+BowenID::zero_epsilon = $zero_epsilon
+
+BowenID::compact_object[0] = "$compact_object1"
+BowenID::compact_object[1] = "$compact_object2"
+BowenID::bh_bare_mass[0]    = $puncmass
+BowenID::tov_rho_central[1] = $rho_central_dimensionless
+BowenID::tov_rho_atmosphere[0] = 0.0 #$rho_atmosphere_dimensionless
+BowenID::tov_rho_atmosphere[1] = 0.0 #$rho_atmosphere_dimensionless
+BowenID::object_rx[0] = $xp
+BowenID::object_rx[1] = $xm
+BowenID::tov_Gamma[1] = $eos_gamma
+BowenID::tov_K[1] = $eos_k
+BowenID::object_Px[0] = $P_BH_plus[0]
+BowenID::object_Py[0] = $P_BH_plus[1]
+BowenID::object_Pz[0] = $P_BH_plus[2]
+BowenID::object_Px[1] = $P_Star_minus[0]
+BowenID::object_Py[1] = $P_Star_minus[1]
+BowenID::object_Pz[1] = $P_Star_minus[2]
+EOF
+  }
+else{
+    print("Initial Data method not found. Please update the rpar file. \n");
+    die;
+}
+
+my $minsearch_var = "";
+if ($hydro_code eq "IllinoisGRMHD")
+{
+  #$minsearch_var = "IllinoisGRMHD::rho_b";
+  $minsearch_var = "HydroBase::rho";
+  if ($symmetry eq "yes")
+  {
+    $symmetry_line = "IllinoisGRMHD::Symmetry = \"equatorial\"";
+  }
+  else
+  {
+    $symmetry_line = "IllinoisGRMHD::Symmetry = \"none\"";
+  }
+
+  $hydro_lines = <<EOF;
+#############################################################
+# IllinoisGRMHD Evolution
+#############################################################
+
+TmunuBase::timelevels               = 1
+TmunuBase::stress_energy_storage    = "yes"
+TmunuBase::stress_energy_at_RHS     = "yes"
+TmunuBase::prolongation_type        = "none"
+
+Convert_To_HydroBase::convert_to_HydroBase_every = 1
+
+IllinoisGRMHD::neos = $neos
+IllinoisGRMHD::gamma_th = $eos_gamma
+IllinoisGRMHD::K_poly = $eos_k
+IllinoisGRMHD::conserv_to_prims_debug = 0
+IllinoisGRMHD::Psi6threshold = $psi6_threshold
+IllinoisGRMHD::damp_lorenz = $damp_lorenz
+IllinoisGRMHD::tau_atm = $rho_atmosphere
+IllinoisGRMHD::rho_b_atm = $rho_atmosphere
+IllinoisGRMHD::rho_b_max = $rho_b_max
+IllinoisGRMHD::update_Tmunu = "yes"
+IllinoisGRMHD::verbose = "no"
+$symmetry_line
+
+SpaceMask::use_mask                 = "yes"
+EOF
+
+    $initialdata_lines = <<EOF;
+#############################################################
+# Initial data
+#############################################################
+InitBase::initial_data_setup_method = "init_all_levels"
+
+HydroBase::initial_hydro = "$hydrobase_initialhydro"
+HydroBase::Initial_Aphi = "zero"
+HydroBase::Initial_Avec = "zero"
+HydroBase::Initial_Bvec = "zero"
+HydroBase::timelevels = 3
+
+ID_converter_ILGRMHD::Gamma_Initial = $eos_gamma
+ID_converter_ILGRMHD::K_Initial = $eos_k
+ID_converter_ILGRMHD::pure_hydro_run = "yes"
+
+$calc_initdata_lines 
+
+EOS_Polytrope::eos_k = $eos_k
+EOS_Polytrope::eos_gamma = $eos_gamma
+EOS_IdealFluid::eos_ideal_fluid_gamma = $eos_gamma
+EOF
+
+    $vars_1d_output .= " IllinoisGRMHD::rho_b IllinoisGRMHD::vx IllinoisGRMHD::vy IllinoisGRMHD::vz";
+    $vars_2d_output .= " IllinoisGRMHD::rho_b IllinoisGRMHD::vx IllinoisGRMHD::vy";
+}
+elsif($hydro_code eq "GRHydro")
+{
+  $minsearch_var = "HydroBase::rho";
+  $hydro_lines = <<EOF;
+#############################################################
+# Scotch Evolution
+#############################################################
+
+TmunuBase::stress_energy_storage    = "yes"
+TmunuBase::stress_energy_at_RHS     = "yes"
+TmunuBase::prolongation_type        = "none"
+
+HydroBase::evolution_method  = "GRHydro"
+HydroBase::timelevels	     = 3
+
+GRHydro::GRHydro_enable_internal_excision = "true"
+GRHydro::sources_spatial_order = 4
+GRhydro::GRHydro_MaxNumEvolvedVars = 5
+GRHydro::GRHydro_eos_type      = "Polytype"   #"General"
+GRHydro::GRHydro_eos_table     = "2D_Polytrope"  #"Ideal_Fluid"
+GRHydro::GRHydro_stencil       = 3
+GRHydro::bound                = "flat"
+GRHydro::rho_abs_min          = $rho_atmosphere
+GRHydro::initial_atmosphere_factor  = 0.999
+GRHydro::wk_atmosphere        = "no"
+GRHydro::recon_method         = "ppm"
+GRHydro::riemann_solver       = "HLLE" #"Marquina"
+GRHydro::sqrtdet_thr	      = 1000.
+GRHydro::GRHydro_atmo_tolerance = 0.0001
+
+#Check the values of each parameter - Read and understand the meaningn of each parameter
+GRHydro::ppm_detect = "no"
+GRHydro::ppm_flatten = "stencil_3"   #"stencil_4"
+GRHydro::ppm_epsilon = 0.0
+GRHydro::ppm_omega1 = 0.52
+GRHydro::ppm_omega2 = 0.0
+GRHydro::ppm_omega_tracer = 0.5   #default
+GRHydro::ppm_epsilon_shock = 0.01
+GRHydro::ppm_eta1 = 5.0
+GRHydro::ppm_eta2 = 0.05
+GRHydro::ppm_k0 = 0.2
+GRHydro::ppm_small = 1.e-7
+
+SpaceMask::use_mask                 = "yes"
+
+EOF
+  $initialdata_lines = <<EOF;
+#############################################################
+# Initial data
+#############################################################
+InitBase::initial_data_setup_method = "init_all_levels"
+
+$calc_initdata_lines 
+
+HydroBase::initial_hydro = "$hydrobase_initialhydro" 
+
+EOS_Polytrope::eos_k = $eos_k
+EOS_Polytrope::eos_gamma = $eos_gamma
+EOS_IdealFluid::eos_ideal_fluid_gamma = $eos_gamma
+EOF
+}
+elsif($hydro_code eq "Whisky")
+{
+  $minsearch_var = "HydroBase::rho";
+  $hydro_lines = <<EOF;
+#############################################################
+# Scotch Evolution
+#############################################################
+
+TmunuBase::stress_energy_storage    = "yes"
+TmunuBase::stress_energy_2_storage  = "no"
+TmunuBase::stress_energy_at_RHS     = "yes"
+TmunuBase::disable_calcTmunu_inc    = "yes"
+TmunuBase::prolongation_type        = "none"
+
+HydroBase::prolongation_type = "ENO"
+HydroBase::evolution_method  = "Scotch_HD"
+HydroBase::timelevels	     = 3
+
+Whisky::whisky_evolve        = "yes"
+Whisky::whisky_eos_type      = "General"
+Whisky::whisky_eos_table     = "Ideal_Fluid"
+Whisky::whisky_stencil       = 3
+Whisky::bound                = "flat"
+Whisky::rho_abs_min          = $rho_atmosphere
+Whisky::initial_atmosphere_factor  = 0.999
+Whisky::wk_atmosphere        = "no"
+Whisky::recon_method         = "ppm"
+Whisky::riemann_solver       = "Marquina"
+Whisky::whisky_check_final_updates = "yes"
+Whisky::whisky_clear_all_nans_everywhere = "yes"
+Whisky::sync_primitives      = "yes"
+Whisky::initial_prim2con     = "yes"
+Whisky::kill_isolated_cells  = "yes"
+
+RecoverMarti::puncture_trick = "yes"
+RecoverMarti::puncture_tau_min = -1
+RecoverMarti::number_of_punctures = 1
+RecoverMarti::puncture_center_from[0] = "spherical surface"
+RecoverMarti::puncture_surface[0]     = $surfnum_tracker[0]
+RecoverMarti::puncture_radius_from[0] = "spherical surface"
+RecoverMarti::puncture_radius_surface[0] = $surfnum_ahs[0]
+RecoverMarti::puncture_radius_factor[0]  = 0.8
+RecoverMarti::impose_s2_limit            = "yes"
+RecoverMarti::recalc_rho_after_limit     = "yes"
+RecoverMarti::check_zsymmetry            = "yes"
+RecoverMarti::warn_if_speed_above        = 0.98
+RecoverMarti::atmo_tolerance             = 0.001
+RecoverMarti::reset_pressure             = "yes"
+RecoverMarti::press_tolerance            = 0.001
+RecoverMarti::zsymmetry_rel_err  = 1e-14
+
+RiemannSolverMarquina::speed_limiter = "yes"
+RiemannSolverMarquina::speed_limit   = 0.999
+
+ReconstructPPM::ppm_detect = "no"
+ReconstructPPM::ppm_epsilon = 0.0
+ReconstructPPM::ppm_omega1 = 0.52
+ReconstructPPM::ppm_omega2 = 0.0
+ReconstructPPM::ppm_epsilon_shock = 0.1
+ReconstructPPM::ppm_eta1 = 5.0
+ReconstructPPM::ppm_k0 = 0.2
+ReconstructPPM::ppm_unroll = "no"
+
+SpaceMask::use_mask                 = "yes"
+
+EOF
+  $initialdata_lines = <<EOF;
+#############################################################
+# Initial data
+#############################################################
+InitBase::initial_data_setup_method = "init_all_levels"
+
+$calc_initdata_lines 
+
+HydroBase::initial_hydro = "$hydrobase_initialhydro"
+
+EOS_Polytrope::eos_k = $eos_k
+EOS_Polytrope::eos_gamma = $eos_gamma
+EOS_IdealFluid::eos_ideal_fluid_gamma = $eos_gamma
+EOF
+}
+else
+{
+  print "Invalid hydrodynamics evolution: $hydro_code!\n";
+  die;
+}
+my $parfile_lines = <<EOF;
+$run_description
+
+###########################
+# Grid Structure Details ##
+###########################
+
+$Grid_Description
+
+### Base Thorns
+ActiveThorns = "GenericFD CoordBase SymBase Boundary NaNChecker CartGrid3D Time MoL CarpetIOBasic CarpetIOScalar IOUtil Carpet CarpetLib Vectors CarpetReduce CarpetInterp CarpetSlab  CarpetIOASCII ADMBase  StaticConformal  SphericalSurface  AEILocalInterp SpaceMask  Slab CarpetIOHDF5  CarpetRegrid2 CarpetTracker TimerReport RunStats Dissipation InitBase $rotatethorn ReflectionSymmetry SphereIntegrate LoopControl GSL Nice HydroBase TmunuBase ADMCoupling ADMMacros EOS_Base Socket Formaline WeightedReduce SystemTopology ShiftTracker AHMask HDF5 MPI Timers CycleClock hwloc zlib"
+
+# Initial Data Thorns
+$initialdata_thorns
+
+# Hydro Thorns
+$hydro_thorns
+
+# Spacetime Thorns
+ActiveThorns = "Kranc2BSSNChiMatter $gauge_thorns"
+
+# Analysis Thorns
+ActiveThorns = "$analysis_thorns"
+
+$csurf_thorns
+
+#############################################################
+# Grid
+#############################################################
+
+CartGrid3D::type                        = "coordbase"
+CartGrid3D::domain                      = "full"
+CartGrid3D::avoid_origin                = "no"
+
+CoordBase::domainsize                   = minmax
+CoordBase::xmin                         = $xmin
+CoordBase::ymin                         = $ymin
+CoordBase::zmin                         = $zmin
+CoordBase::xmax                         = $rlvls[0]
+CoordBase::ymax                         = $rlvls[0]
+CoordBase::zmax                         = $rlvls[0]
+CoordBase::dx                           = $h0
+CoordBase::dy                           = $h0
+CoordBase::dz                           = $h0
+CoordBase::boundary_size_x_lower        = $ghost_zones
+CoordBase::boundary_size_y_lower        = $ghost_zones
+CoordBase::boundary_size_z_lower        = $ghost_zones
+CoordBase::boundary_shiftout_x_lower    = $xmin_shiftout
+CoordBase::boundary_shiftout_y_lower    = $ymin_shiftout
+CoordBase::boundary_shiftout_z_lower    = $zmin_shiftout
+CoordBase::boundary_size_x_upper        = $ghost_zones
+CoordBase::boundary_size_y_upper        = $ghost_zones
+CoordBase::boundary_size_z_upper        = $ghost_zones
+CoordBase::boundary_shiftout_x_upper    = 0
+CoordBase::boundary_shiftout_y_upper    = 0
+CoordBase::boundary_shiftout_z_upper    = 0
+
+#############################################################
+# Symmetries
+#############################################################
+
+ReflectionSymmetry::reflection_x        = "$reflectx"
+ReflectionSymmetry::reflection_y        = "$reflecty"
+ReflectionSymmetry::reflection_z        = "$reflectz"
+ReflectionSymmetry::avoid_origin_x      = "no"
+ReflectionSymmetry::avoid_origin_y      = "no"
+ReflectionSymmetry::avoid_origin_z      = "no"
+
+$RS RotatingSymmetry180::poison_boundaries  = "yes"
+
+#############################################################
+# Run statistics
+#############################################################
+
+RunStats::calc_every         = $every_coarse
+RunStats::output_mem_every   = $every_coarse
+TimerReport::out_every       = $every_10M
+TimerReport::out_filename    = "TimerReport"
+
+#############################################################
+# CarpetRegrid2
+#############################################################
+
+CarpetRegrid2::num_centres                     = $num_grid_centres
+CarpetRegrid2::regrid_every                    = $regrid_every
+CarpetRegrid2::freeze_unaligned_levels         = "yes" 
+CarpetRegrid2::freeze_unaligned_parent_levels  = "yes" 
+CarpetRegrid2::min_distance                    = 0
+CarpetRegrid2::snap_to_coarse                  = "yes"
+CarpetRegrid2::verbose                         = "no"
+CarpetRegrid2::symmetry_rotating180            = "$rotate180"
+
+CarpetRegrid2::num_levels_1    =  $levels_centre[0]
+CarpetTracker::surface     [0] = 0
+CarpetRegrid2::position_x_1    =  $xp
+CarpetRegrid2::position_y_1    =  0
+CarpetRegrid2::position_z_1    =  0
+$CarpetRegrid2_radii_centre[0]
+
+CarpetRegrid2::num_levels_2    =  $levels_centre[1]
+CarpetTracker::surface     [1] = 1
+CarpetRegrid2::position_x_2    =  $xm
+CarpetRegrid2::position_y_2    =  0
+CarpetRegrid2::position_z_2    =  0
+$CarpetRegrid2_radii_centre[1]
+
+CarpetRegrid2::num_levels_3    =  $levels_centre[2]
+CarpetRegrid2::position_x_3    =  0
+CarpetRegrid2::position_y_3    =  0
+CarpetRegrid2::position_z_3    =  0
+$CarpetRegrid2_radii_centre[2]
+
+#############################################################
+# AHMask
+#############################################################
+
+AHMask::verbose               = 0
+AHMask::use_space_mask        = "yes"
+AHMask::create_buffered_mask  = "no"
+
+#############################################################
+# WeightedReduce
+#############################################################
+WeightedReduce::WeightVar    = "AHMask::AHMasked_weight"
+
+#############################################################
+# SphericalSurface
+#############################################################
+
+SphericalSurface::nsurfaces  = $number_surfs_total
+SphericalSurface::maxntheta  = $SS_maxtheta
+SphericalSurface::maxnphi    = $SS_maxphi
+
+## Surfaces for Trackers: default (very low) resolution ##
+$Tracker_Surface_Resolution_lines
+$AH_Surface_Resolution_lines
+$Spin_Surface_Resolution_lines
+$Integration_Volume_Surface_Resolution_lines
+
+#############################################################
+# Shift tracker
+#############################################################
+
+ShiftTracker::x0[0]              = $xp
+ShiftTracker::y0[0]              = 0.0
+ShiftTracker::z0[0]              = 0.0
+ShiftTracker::surface_index[0]   = $surfnum_tracker[0]
+
+ShiftTracker::num_trackers       = 1
+ShiftTracker::verbose            = 0
+ShiftTracker::output_every       = 1
+ShiftTracker::interpolator_name  = "Lagrange polynomial interpolation"
+ShiftTracker::interpolator_pars  = "order=4"
+ShiftTracker::beta1_var          = "Kranc2BSSNChiMatter::beta1"
+ShiftTracker::beta2_var          = "Kranc2BSSNChiMatter::beta2"
+ShiftTracker::beta3_var          = "Kranc2BSSNChiMatter::beta3"
+
+#############################################################
+# MinSearch
+#############################################################
+
+MinSearch::x0[0]               = $xm
+MinSearch::y0[0]               = 0.0
+MinSearch::z0[0]               = 0.0
+MinSearch::surface_index[0]    = $surfnum_tracker[1]
+MinSearch::extra_variables[0] = "HydroBase::eps"
+MinSearch::weight_variable[0] = "AHMask::AHmasked_weight"
+
+MinSearch::nminima             = 1
+MinSearch::dist_cutoff         = $star_tracker_radii 
+MinSearch::var                 = "$minsearch_var" 	
+MinSearch::verbose             = 0
+MinSearch::track_maximum       = "yes"
+MinSearch::find_global_minimum = "no"
+MinSearch::find_localized_minimum = "yes"
+MinSearch::interpolator_name   = "Lagrange polynomial interpolation"
+MinSearch::interpolator_pars   = "order=4"
+MinSearch::find_every          = $track_every
+MinSearch::outfile_basename    = "MinSearch%d.asc"
+
+#############################################################
+# Carpet
+#############################################################
+
+Carpet::ghost_size                      = $ghost_zones
+Carpet::domain_from_coordbase           = "yes"
+Carpet::max_refinement_levels           = $numlevels
+Carpet::refinement_factor               = 2
+Carpet::prolongation_order_space        = $prolong_order
+Carpet::prolongation_order_time         = 2
+Carpet::use_buffer_zones                = "yes"
+Carpet::verbose                         = "no"
+Carpet::time_refinement_factors         = "[$timerefs]"
+Carpet::output_timers_every             = $every_coarse
+Carpet::poison_new_timelevels           = "yes"
+Carpet::check_for_poison                = "no"
+Carpet::poison_value                    = 113
+Carpet::print_timestats_every           = 0
+Carpet::init_fill_timelevels            = "yes"
+Carpet::init_3_timelevels               = "no"
+Carpet::convergence_level               = 0
+Carpet::enable_all_storage              = "no"
+Carpet::grid_coordinates_filename = "grid.asc" 
+
+#############################################################
+# CarpetLib
+#############################################################
+
+CarpetLib::poison_new_memory            = "yes"
+CarpetLib::poison_value                 = 114
+CarpetLib::print_memstats_every         = $every_10M
+CarpetLib::support_staggered_operators  = "yes"
+
+#############################################################
+# CarpetInterp
+#############################################################
+
+CarpetInterp::tree_search               = "yes" 
+CarpetInterp::check_tree_search         = "no"
+
+#############################################################
+# Time integration
+#############################################################
+
+Cactus::terminate                     = "any"
+Cactus::max_runtime                   = $max_runtime
+Cactus::cctk_final_time               = $final_time
+Cactus::cctk_itlast                   = 10000000
+Cactus::cctk_timer_output             = "full"
+Cactus::highlight_warning_messages    = "no"
+
+Time::dtfac                           = $base_dtfac
+
+MethodOfLines::ode_method             = "RK4"
+MethodOfLines::MoL_NaN_Check          = "no"
+MethodOfLines::MoL_Intermediate_Steps = 4
+MethodOfLines::MoL_Num_Scratch_Levels = 1
+
+#############################################################
+# Adjust NSBH
+#############################################################
+$Baum_parfile_lines
+
+$initialdata_lines
+$hydro_lines
+
+
+#############################################################
+# Evolution system
+#############################################################
+
+ADMBase::evolution_method = "Kranc2BSSNChiMatter"
+ADMBase::lapse_evolution_method = "Kranc2BSSNChiMatter"
+ADMBase::shift_evolution_method = "Kranc2BSSNChiMatter"
+ADMBase::dtlapse_evolution_method = "Kranc2BSSNChiMatter"
+ADMBase::dtshift_evolution_method = "Kranc2BSSNChiMatter"
+
+Kranc2BSSNChiMatter::delayGREvolutiontoItn    = 0
+Kranc2BSSNChiMatter::m                        = 1
+Kranc2BSSNChiMatter::lapseAdvection           = $lapseAdvection
+Kranc2BSSNChiMatter::gammaDriverLambda        = $gammaDriverLambda
+Kranc2BSSNChiMatter::betaDotAlphaFactor       = $betaDotAlphaFactor
+Kranc2BSSNChiMatter::etaBeta                  = $etaBeta
+Kranc2BSSNChiMatter::chiBeta                  = $chiBeta
+Kranc2BSSNChiMatter::gammaDriverLapsePower    = $gammaDriverLapsePower
+Kranc2BSSNChiMatter::nasaAdvection            = $nasaAdvection
+Kranc2BSSNChiMatter::newNASAAdvection         = $newNASAAdvection
+Kranc2BSSNChiMatter::betatAdvection           = $betatAdvection
+Kranc2BSSNChiMatter::chiEps                   = $chiEps
+Kranc2BSSNChiMatter::verbose                  = 0
+Kranc2BSSNChiMatter::fd_order                 = "$fd_order_param_K2B"
+Kranc2BSSNChiMatter::lapse_condition          = "$lapse_condition"
+Kranc2BSSNChiMatter::shift_condition          = "$shift_condition_par"
+Kranc2BSSNChiMatter::boundary_condition       = "radiative"
+Kranc2BSSNChiMatter::couple_matter            = "yes"
+Kranc2BSSNChiMatter::recalculate_constraints  = "matter"
+Kranc2BSSNChiMatter::constraintsfdorder       = $spacetime_fd_order
+Kranc2BSSNChiMatter::mol_register_tmunu       = $mol_register_tmunu
+
+$ExternalEtaBeta_ParLines
+
+# These specify that no built-in CactusBase/Boundary boundary
+# condition is to be applied. These parameters must be present or the
+# Cactus symmetry boundary condition will not be applied. 
+Kranc2BSSNChiMatter::A_group_bound      = "none"
+Kranc2BSSNChiMatter::alpha_group_bound  = "none"
+Kranc2BSSNChiMatter::beta_group_bound   = "none"
+Kranc2BSSNChiMatter::betat_group_bound  = "none"
+Kranc2BSSNChiMatter::Gam_group_bound    = "none"
+Kranc2BSSNChiMatter::h_group_bound      = "none"
+Kranc2BSSNChiMatter::K_group_bound      = "none"
+Kranc2BSSNChiMatter::chi_group_bound    = "none"
+
+#############################################################
+# Dissipation
+#############################################################
+
+Dissipation::order                 = $diss_order
+Dissipation::epsdis                = 0.0
+$Dissipation_per_level_lines
+Dissipation::vars                  = "Kranc2BSSNChiMatter::A_group Kranc2BSSNChiMatter::alpha_group Kranc2BSSNChiMatter::beta_group Kranc2BSSNChiMatter::betat_group Kranc2BSSNChiMatter::Gam_group Kranc2BSSNChiMatter::h_group Kranc2BSSNChiMatter::K_group Kranc2BSSNChiMatter::chi_group"
+
+#############################################################
+# AHFinder
+#############################################################
+
+$AHFinder_parfile_lines
+
+#############################################################
+# Check for NaNs 
+#############################################################
+
+NaNChecker::check_every = $every_10M
+NaNChecker::action_if_found = "terminate" # "just warn", "abort"
+NaNChecker::check_vars = "TmunuBase::stress_energy_vector TmunuBase::stress_energy_tensor TmunuBase::stress_energy_scalar HydroBase::rho HydroBase::press HydroBase::eps HydroBase::vel Kranc2BSSNChiMatter::A_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi Kranc2BSSNChiMatter::h_group Kranc2BSSNChiMatter::beta_group Kranc2BSSNChiMatter::Gam_group Kranc2BSSNChiMatter::betat_group"
+NaNChecker::verbose = "all"
+NaNChecker::ignore_restricted_points = "yes"
+
+#############################################################
+# TotalRestMass 
+#############################################################
+
+$TotalRestMass_parfile_lines
+
+#############################################################
+# Wave extraction
+#############################################################
+
+## TODO: Add or replace with Multipole ##
+$Ylm_Decomp_parfile_lines
+$WeylScal4_parfile_lines
+
+#############################################################
+# Psi4Analysis
+#############################################################
+$Psi4Analysis_parfile_lines
+
+#######################V######################################
+# ADM_EJP
+#############################################################
+
+$ADMEJP_parfile_lines 
+#############################################################
+# IHSpin
+#############################################################
+
+$IHSpin_parfile_lines
+
+#############################################################
+# SphereRad
+#############################################################
+
+$SphereRad_parfile_lines
+
+#######################V######################################
+# Outflow
+#############################################################
+
+$Outflow_parfile_lines 
+
+#############################################################
+# Output
+#############################################################
+
+IO::out_dir                          = \$parfile
+IO::out_fileinfo                     = "all"
+
+Carpet::grid_structure_filename      = "carpetgrid.asc"
+
+CarpetIOBasic::outInfo_every         = $out_info_every
+CarpetIOBasic::outInfo_vars          = "$vars_info_output"
+CarpetIOBasic::real_max              = 1e6
+CarpetIOBasic::int_width             = 12
+
+CarpetIOScalar::outScalar_every      = $out_1d_every
+CarpetIOScalar::outScalar_reductions = "minimum maximum norm2"
+CarpetIOScalar::outScalar_vars       = "$vars_0d_output"
+
+CarpetIOASCII::out0D_every           = $out_1d_every
+CarpetIOASCII::out0D_vars            = "Carpet::timing"
+
+CarpetIOASCII::out1D_every           = $out_1d_every
+CarpetIOASCII::out1D_x               = "yes"
+CarpetIOASCII::out1D_y               = "yes"
+CarpetIOASCII::out1D_z               = "no"
+CarpetIOASCII::out1D_d               = "no"
+CarpetIOASCII::out1D_vars            = "$vars_1d_output"
+CarpetIOASCII::out_precision         = 7
+
+CarpetIOHDF5::compression_level      = 0
+IO::out_single_precision             = "yes"
+CarpetIOHDF5::out2D_every            = $out_2d_every
+CarpetIOHDF5::out2D_xy               = "yes"
+CarpetIOHDF5::out2D_xz               = "no"
+CarpetIOHDF5::out2D_yz               = "no"
+CarpetIOHDF5::out2d_vars             = "$vars_2d_output"
+
+CarpetIOHDF5::out_every              = $out_3d_every
+CarpetIOHDF5::out_vars               = "$vars_3d_output"
+CarpetIOHDF5::one_file_per_group     = "no"
+
+#############################################################
+# Checkpoint and recovery
+#############################################################
+
+CarpetIOHDF5::checkpoint       = "yes"
+CarpetIOHDF5::open_one_input_file_at_a_time = "yes"
+IO::checkpoint_every_walltime_hours = $checkpoint_walltime
+IO::checkpoint_keep            = 2
+IO::checkpoint_dir             = $chkptdir
+IO::checkpoint_on_terminate    = "$checkpt_terminate"
+IO::checkpoint_id              = "no"
+
+IO::recover                    = "autoprobe"
+IO::recover_dir                = $chkptdir
+IO::recover_and_remove         = "no"
+
+EOF
+
+open(OUT,">$filename");
+print OUT "$parfile_lines";
+close(OUT);

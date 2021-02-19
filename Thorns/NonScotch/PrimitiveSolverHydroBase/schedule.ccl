@@ -1,0 +1,24 @@
+# Schedule definitions for thorn MatterLibs
+# $Header:$
+schedule PrimitiveSolver_SetPrims in HydroBase_Initial 
+{
+	 LANG: C
+
+} "Set primitives (and possibly metric) from MatterLibs"
+
+#  schedule PrimitiveSolver_EOSHandle before PrimitiveSolver_SetPrims
+#  {
+#    LANG: C
+#  } "Set the EOS number"
+
+
+if (timelevels == 3)
+{
+  STORAGE: ADMBase::metric[3], ADMBase::curv[3]
+  STORAGE: ADMBase::lapse[3],ADMBase::shift[3]
+}
+else if (timelevels > 0)
+{
+  STORAGE: ADMBase::metric[2], ADMBase::curv[2]
+  STORAGE: ADMBase::lapse[2], ADMBase::shift[2]
+}

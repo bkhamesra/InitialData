@@ -1,0 +1,158 @@
+
+#############################################################
+# Parameter file for running a single puncture with matter
+#############################################################
+
+ActiveThorns = "SphericalInfall CoordBase SymBase Boundary InitBase CartGrid3d CarpetIOBasic CarpetIOASCII CarpetIOScalar IOUtil Carpet CarpetLib CarpetReduce CarpetInterp CarpetSlab CarpetRegrid LoopControl GSL ADMBase StaticConformal SphericalSurface AEILocalInterp ReflectionSymmetry HydroBase TotalRestMass RegridBoxes AHMask SpaceMask GenericFD MoL"
+
+#############################################################
+# Grid
+#############################################################
+
+CoordBase::domainsize                   = minmax
+
+CoordBase::boundary_size_x_lower        = 3
+CoordBase::boundary_size_y_lower        = 3
+CoordBase::boundary_size_z_lower        = 3
+CoordBase::boundary_shiftout_x_lower    = 1
+CoordBase::boundary_shiftout_y_lower    = 1
+CoordBase::boundary_shiftout_z_lower    = 1
+
+CoordBase::boundary_size_x_upper        = 3
+CoordBase::boundary_size_y_upper        = 3
+CoordBase::boundary_size_z_upper        = 3
+CoordBase::boundary_shiftout_x_upper    = 0
+CoordBase::boundary_shiftout_y_upper    = 0
+CoordBase::boundary_shiftout_z_upper    = 0
+
+CartGrid3D::type                        = "coordbase"
+CartGrid3D::domain                      = "full"
+CartGrid3D::avoid_origin                = "no"
+
+ReflectionSymmetry::reflection_x   = yes
+ReflectionSymmetry::reflection_y   = yes
+ReflectionSymmetry::reflection_z   = yes
+ReflectionSymmetry::avoid_origin_x = no
+ReflectionSymmetry::avoid_origin_y = no
+ReflectionSymmetry::avoid_origin_z = no
+
+CoordBase::xmin                         = 0
+CoordBase::ymin                         = 0
+CoordBase::zmin                         = 0
+CoordBase::xmax                         = 12
+CoordBase::ymax                         = 12
+CoordBase::zmax                         = 12
+CoordBase::dx                           = 0.5
+CoordBase::dy                           = 0.5
+CoordBase::dz                           = 0.5
+
+#############################################################
+# CarpetRegrid
+#############################################################
+
+CarpetRegrid::regrid_every                = 0
+CarpetRegrid::veryverbose                 = "no"
+CarpetRegrid::verbose                     = "no"
+CarpetRegrid::refinement_levels           = 1
+CarpetRegrid::refined_regions             = "manual-coordinate-list"
+CarpetRegrid::smart_outer_boundaries      = yes
+CarpetRegrid::keep_same_grid_structure    = "no"
+
+#############################################################
+# Mesh refinement
+#############################################################
+
+RegridBoxes::number_of_centres          = 1
+RegridBoxes::regrid_every               = 128
+RegridBoxes::merge_margin               = 8
+RegridBoxes::verbose                    = 0
+RegridBoxes::rotatingsymmetry180        = "no"
+
+RegridBoxes::centre_from       [0] = "parameter"
+RegridBoxes::refinement_levels [0] = 1
+RegridBoxes::centre_x          [0] = 0
+RegridBoxes::centre_y          [0] = 0
+RegridBoxes::centre_z          [0] = 0
+RegridBoxes::centre_0_radius[1]    = 8
+
+#############################################################
+# Mesh refinement
+#############################################################
+
+Carpet::ghost_size                      = 3
+Carpet::domain_from_coordbase           = "yes"
+Carpet::max_refinement_levels           = 1
+Carpet::refinement_factor               = 2
+Carpet::prolongation_order_space        = 5
+Carpet::prolongation_order_time         = 2
+Carpet::poison_new_timelevels           = "no"
+Carpet::check_for_poison                = "no"
+Carpet::init_fill_timelevels = "yes"
+Carpet::verbose = "yes"
+#Carpet::veryverbose = "yes"
+Carpet::enable_all_storage		= "yes"
+Carpet::use_buffer_zones		= "yes"
+
+#############################################################
+# CarpetLib
+#############################################################
+
+CarpetLib::poison_new_memory            = "yes"
+CarpetLib::poison_value                 = 114
+
+#############################################################
+# Time integration
+#############################################################
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 2
+
+#############################################################
+# SphericalInfall
+#############################################################
+
+SphericalInfall::epsilon = 1e-3
+SphericalInfall::rmin    = 2
+SphericalInfall::eos_gamma = 1.66666666666667
+SphericalInfall::initial_dens = 0.001
+SphericalInfall::initial_energy = 1e-06
+
+#############################################################
+# SphericalSurface
+#############################################################
+
+SphericalSurface::nsurfaces  = 6
+SphericalSurface::maxntheta  = 120
+SphericalSurface::maxnphi    = 40
+
+#############################################################
+# Apparent Horizon
+#############################################################
+
+#############################################################
+# AHMask 
+#############################################################
+
+AHMask::use_space_mask = "no"
+
+#############################################################
+# Total Mass Thorn
+#############################################################
+
+TotalRestMass::debug		= "yes"
+TotalRestMass::verbose		= "yes"
+TotalRestMass::calc_mass_every  = 2
+TotalRestMass::intvolumes	= 4
+TotalRestMass::int_wi_rad[0]	= 50
+TotalRestMass::int_wi_rad[1]	= 3
+TotalRestMass::calc_mass_every_vol[1]  = 1
+TotalRestMass::int_wi_rad[2]	= 5
+TotalRestMass::calc_mass_every_vol[2]  = 0
+TotalRestMass::int_wi_rad[3]	= 8
+
+#############################################################
+# Output
+#############################################################
+
+IO::out_dir                   = $parfile
+IO::out_fileinfo              = "all"

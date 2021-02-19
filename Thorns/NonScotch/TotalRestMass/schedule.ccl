@@ -1,0 +1,37 @@
+# Schedule definitions for thorn TotalRestMass
+# $Header:$
+
+storage: VolumeMass, SymmetryFactor, Volume_dMassdt
+
+schedule TotalRestMass_Startup AT CCTK_PARAMCHECK
+{
+  LANG: C
+  OPTIONS: global
+} "Check parameters"
+
+schedule TotalRestMass_Init at CCTK_BASEGRID
+{
+  lang: C
+} "Initialize Scalars and set up buffer zone information"
+
+schedule group TotalRestMass at ANALYSIS
+{
+} "Find the total rest mass of the system"
+
+schedule ZeroMasses in TotalRestMass before SumRestMass
+{
+  lang: C
+  OPTIONS: global
+} "Zero masses before possible integration."
+
+schedule SumRestMass in TotalRestMass
+{
+  lang: C
+  OPTIONS: global loop-local
+} "Calculate the total rest mass in the spacetime, outside the AHs"
+
+schedule TotalRestMass_output in TotalRestMass after SumRestMass
+{
+  lang: C
+  OPTIONS: global
+} "Write output in one nicely condensed file."

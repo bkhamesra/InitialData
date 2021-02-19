@@ -1,0 +1,99 @@
+# Parameter definitions for thorn TwoPunctures
+# $Header: /numrelcvs/HerrmannCVS/TwoPunctures/param.ccl,v 1.4 2004/10/25 13:41:10 herrmann Exp $
+
+SHARES: ADMBase
+
+USES KEYWORD metric_type
+
+EXTENDS KEYWORD initial_data 
+{
+  "twopuncturessolver" :: "source-independent hamiltonian constraint solver"
+} 
+
+EXTENDS KEYWORD initial_lapse
+{
+  "utb" :: "the UTB lapse to have the puncture nicely behaved (see gr-qc/0511048)"
+  "2/(1+psi_{BL}^4)" :: "UTB lapse from gr-qc/0604012 for spinning holes"
+}
+
+PRIVATE:
+
+BOOLEAN verbose "Print screen output while solving"
+{
+} "no"
+
+BOOLEAN keep_u_around "Keep the variable u around after solving"
+{
+} "no"
+
+KEYWORD grid_setup_method "How to fill the 3D grid from the spectral grid"
+{
+  "Taylor expansion" :: "use a Taylor expansion about the nearest collocation point (fast, but might be inaccurate)"
+  "evaluation"       :: "evaluate using all spectral coefficients (slow)"
+} "Taylor expansion"
+
+INT npoints_A "Number of coefficients in the compactified radial direction" STEERABLE=ALWAYS
+{
+  4:* :: ""
+} 30
+
+INT npoints_B "Number of coefficients in the angular direction" STEERABLE=ALWAYS
+{
+  4:* :: ""
+} 30
+
+INT npoints_phi "Number of coefficients in the phi direction" STEERABLE=ALWAYS
+{
+  4:*:2 :: ""
+} 16
+
+REAL Newton_tol "Tolerance for Newton solver"
+{
+  (0:*) :: ""
+} 1.0e-10
+
+INT Newton_maxit "Maximum number of Newton iterations"
+{
+  0:* :: ""
+} 5
+
+BOOLEAN Newton_abort_if_unsuccessful "Abort run if Newton solver does not converge within Newton_maxit"
+{
+} "no"
+
+# this moves the origin of the evolution grid to move_origin_x in TwoPunctures
+# coordinate system.
+# the punctures appear at \pm par_b - move_origin_x in the evolution grid
+REAL move_origin_x "move origin in x direction - can be used to get the center of mass for unequal mass black holes on top of the origin of the grid" STEERABLE=always
+{
+  *:* :: ""
+} 0.0
+
+REAL admrad "radius where to evaluate the adm mass"
+{
+  0:* :: ""
+} 1.0e6
+
+CCTK_REAL psi0_limit "max value of psi in Ebar = E psi^8 and jbar = j psi^10"
+{
+  -1  :: "no limit"  
+  0:* :: "any positive value will do"
+} -1
+
+BOOLEAN bypass_solve "Bypass the solver completely?"
+{
+} "no"
+
+BOOLEAN use_full_transform "compute full Fourier/Chebyshev transform before evaluation"
+{
+} "no"
+
+REAL conformal_density_power "exponent for conformal density"
+{
+  5.:* :: "should usually be greater than 5"
+} 8.
+
+REAL par_b "length scale for spectral grid (in binary BHs, should be half the separation" STEERABLE=always
+{
+  (0.0:*) :: ""
+} 1.0

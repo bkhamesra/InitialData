@@ -1,0 +1,27 @@
+# Interface definition for thorn BowenID
+# $Header:$
+
+implements: bowenid
+
+USES INCLUDE: VectorAlgebra.hh OutputTable.hh
+
+void FUNCTION getSourceInfo(CCTK_REAL IN xx, CCTK_REAL IN yy, CCTK_REAL IN zz, CCTK_REAL OUT rhohat, CCTK_REAL ARRAY OUT jhat, CCTK_REAL OUT psi, CCTK_REAL OUT psiguess, CCTK_REAL ARRAY OUT Aij)
+PROVIDES FUNCTION getSourceInfo WITH bowenid_getSourceInfo LANGUAGE C
+
+CCTK_REAL FUNCTION getSourceMass(CCTK_INT IN index)
+PROVIDES FUNCTION getSourceMass with bowenid_getSourceMass LANGUAGE C
+
+CCTK_REAL FUNCTION getRestMass(CCTK_INT IN index)
+PROVIDES FUNCTION getRestMass with bowenid_getRestMass LANGUAGE C
+
+void FUNCTION remakeSources(CCTK_INT IN resolve)
+PROVIDES FUNCTION remakeSources with bowenid_reconstructSources LANGUAGE C
+
+CCTK_REAL FUNCTION getExternalPsiGuess(CCTK_INT IN idx, CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+PROVIDES FUNCTION getExternalPsiGuess with bowenid_getExternalPsiGuess LANGUAGE C
+
+
+#CCTK_REAL tov_mass_group[2] TYPE=SCALAR
+#{
+#	bowen_tov_mass
+#} "tov masses, multiplied by lorentz factor"

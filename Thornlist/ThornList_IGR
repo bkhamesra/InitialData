@@ -1,0 +1,495 @@
+!CRL_VERSION = 1.0
+
+!DEFINE ROOT = Cactus
+!DEFINE ARR  = $ROOT/arrangements
+
+# Default version of ET repositories. For development, 
+# comment out the lines containing this and uncomment
+# the lines containing "trunk"
+!DEFINE ET_RELEASE = ET_2015_11
+
+# Cactus Flesh
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactus.git
+!NAME     = flesh
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT = CONTRIBUTORS COPYRIGHT doc lib Makefile src
+
+# Cactus option files
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/cfgfiles
+!AUTH_URL = https://www.numrel.org/git/repos/cfgfiles
+!REPO_BRANCH = master
+!REPO_PATH = ..
+!CHECKOUT = ./cfgfiles
+
+# Thorn lists
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/thornlists
+!AUTH_URL = https://www.numrel.org/git/repos/thornlists
+!REPO_BRANCH = master
+!REPO_PATH = ..
+!CHECKOUT = ./thornlists
+
+# Parameter files
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/parfiles
+!AUTH_URL = https://www.numrel.org/git/repos/parfiles
+!REPO_BRANCH = master
+!REPO_PATH = ..
+!CHECKOUT = ./parfiles
+
+# Maya scripts
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/scripts
+!AUTH_URL = https://www.numrel.org/git/repos/scripts
+!REPO_BRANCH = master
+!REPO_PATH= ..
+!CHECKOUT = ./scripts
+
+# Maya tools source
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/tools
+!AUTH_URL = https://www.numrel.org/git/repos/tools
+!REPO_PATH= ..
+!CHECKOUT = ./tools
+
+# The GetComponents script
+!TARGET   = $ROOT/bin
+!TYPE     = git
+!URL      = https://github.com/gridaphobe/CRL.git
+!CHECKOUT = GetComponents
+
+# Simulation Factory
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://bitbucket.org/simfactory/simfactory2.git
+!REPO_PATH=$1
+!NAME     = simfactory2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT = ./simfactory
+
+# Kranc (required e.g. by McLachlan)
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = git://github.com/ianhinder/Kranc.git
+!AUTH_URL = git@github.com:ianhinder/Kranc.git
+!REPO_BRANCH = $ET_RELEASE
+!REPO_PATH= ..
+!CHECKOUT = ./Kranc
+
+# Numerical
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/numerical.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+Numerical/AEILocalInterp
+
+# CactusBase thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactusbase.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT = 
+CactusBase/Boundary
+CactusBase/CartGrid3D
+CactusBase/CoordBase
+CactusBase/Fortran
+CactusBase/IOBasic
+CactusBase/IOUtil
+CactusBase/IOASCII
+CactusBase/InitBase
+CactusBase/SymBase
+CactusBase/Time
+
+# CactusPUGH thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactuspugh.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CactusPUGH/PUGH
+CactusPUGH/PUGHInterp
+CactusPUGH/PUGHReduce
+CactusPUGH/PUGHSlab
+
+# CactusPUGHIO thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactuspughio.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CactusPUGHIO/IOHDF5Util
+CactusPUGHIO/IOHDF5
+
+# CactusNumerical thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactusnumerical.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CactusNumerical/LocalInterp
+CactusNumerical/LocalReduce
+CactusNumerical/MoL
+#CactusNumerical/Periodic
+CactusNumerical/Slab
+CactusNumerical/SpaceMask
+CactusNumerical/SphericalSurface
+CactusNumerical/ReflectionSymmetry
+CactusNumerical/RotatingSymmetry180
+CactusNumerical/RotatingSymmetry90
+CactusNumerical/Dissipation
+CactusNumerical/SummationByParts
+
+# CactusUtils thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactusutils.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CactusUtils/Formaline
+CactusUtils/Nice
+CactusUtils/TimerReport
+CactusUtils/Vectors
+CactusUtils/NaNChecker
+CactusUtils/SystemTopology
+
+# CactusConnect thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactusconnect.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CactusConnect/HTTPD
+#CactusConnect/HTTPDExtra
+CactusConnect/Socket
+
+# CactusElliptic thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/cactuscode/cactuselliptic.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+#CactusElliptic/EllBase
+#CactusElliptic/EllSOR
+
+# Additional Cactus thorns
+!TARGET   = $ARR
+!TYPE     = svn
+#!AUTH_URL = https://svn.cactuscode.org/projects/$1/$2/trunk
+#!URL      = http://svn.cactuscode.org/projects/$1/$2/trunk
+!AUTH_URL = https://svn.cactuscode.org/projects/$1/$2/branches/$ET_RELEASE
+!URL      = http://svn.cactuscode.org/projects/$1/$2/branches/$ET_RELEASE
+!CHECKOUT =
+ExternalLibraries/zlib
+ExternalLibraries/GSL
+ExternalLibraries/HDF5
+ExternalLibraries/libjpeg
+##ExternalLibraries/LAPACK
+##ExternalLibraries/BLAS
+ExternalLibraries/OpenBLAS
+ExternalLibraries/MPI
+ExternalLibraries/hwloc
+ExternalLibraries/LORENE
+
+# A newer version of Lorene, by default disabled
+!TARGET   = $ARR/ExternalLibraries
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/lorene.git
+!NAME     = LORENE2
+!REPO_BRANCH = $ET_RELEASE
+!REPO_PATH= ../
+!CHECKOUT = LORENE2
+#DISABLED LORENE2
+
+# Carpet, the AMR driver
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/eschnett/carpet.git
+!AUTH_URL = git@bitbucket.org:eschnett/carpet.git
+#!URL      = git://carpetcode.org/carpet
+#!AUTH_URL = carpetgit@carpetcode.org:carpet
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT = 
+Carpet/Carpet
+Carpet/CarpetIOASCII
+Carpet/CarpetIOBasic
+Carpet/CarpetIOHDF5
+Carpet/CarpetIOScalar
+Carpet/CarpetInterp
+Carpet/CarpetLib
+Carpet/CarpetReduce
+Carpet/CarpetRegrid
+Carpet/CarpetRegrid2
+Carpet/CarpetSlab
+Carpet/CarpetTracker
+Carpet/CycleClock
+Carpet/LoopControl
+Carpet/Timers
+#Carpet/CarpetMask
+
+# EinsteinAnalysis
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteinanalysis.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+#EinsteinAnalysis/ADMConstraints          
+EinsteinAnalysis/WeylScal4
+EinsteinAnalysis/Multipole
+EinsteinAnalysis/QuasiLocalMeasures
+EinsteinAnalysis/AHFinderDirect
+
+# EinsteinBase
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteinbase.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+EinsteinBase/ADMBase                 
+EinsteinBase/ADMCoupling             
+EinsteinBase/ADMMacros               
+EinsteinBase/CoordGauge              
+EinsteinBase/StaticConformal         
+EinsteinBase/EOS_Base
+EinsteinBase/HydroBase
+EinsteinBase/TmunuBase
+EinsteinBase/Constants
+
+# EinsteinUtils
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteinutils.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+EinsteinUtils/TGRtensor
+#EinsteinUtils/SetMask_SphericalSurface
+
+# EinsteinEOS
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteineos.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+EinsteinEOS/EOS_Hybrid
+EinsteinEOS/EOS_IdealFluid
+EinsteinEOS/EOS_Omni
+EinsteinEOS/EOS_Polytrope
+
+# EinsteinEvolve
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteinevolve.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+EinsteinEvolve/GRHydro
+#EinsteinEvolve/GRHydro_InitData
+#EinsteinEvolve/NewRad
+
+# EinsteinInitialData
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/einsteintoolkit/einsteininitialdata.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+#EinsteinInitialData/DistortedBHIVP
+#EinsteinInitialData/Exact
+#EinsteinInitialData/Hydro_InitExcision
+#EinsteinInitialData/IDAnalyticBH
+#EinsteinInitialData/IDAxiBrillBH
+#EinsteinInitialData/IDAxiOddBrillBH
+#EinsteinInitialData/IDBrillData
+#EinsteinInitialData/IDConstraintViolate
+#EinsteinInitialData/IDFileADM
+#EinsteinInitialData/IDLinearWaves
+EinsteinInitialData/Meudon_Bin_BH
+EinsteinInitialData/Meudon_Bin_NS
+EinsteinInitialData/Meudon_Mag_NS
+#EinsteinInitialData/NoExcision
+#EinsteinInitialData/RotatingDBHIVP
+EinsteinInitialData/TOVSolver
+#EinsteinInitialData/TwoPunctures
+
+
+# From Kranc (required e.g. by McLachlan)
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = git://github.com/ianhinder/Kranc.git
+#!AUTH_URL = git@github.com:ianhinder/Kranc.git
+!REPO_BRANCH = $ET_RELEASE
+!REPO_PATH= Auxiliary/Cactus
+!CHECKOUT = 
+KrancNumericalTools/GenericFD
+
+# InitialData BK thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/arrangements/$1
+!AUTH_URL = https://www.numrel.org/git/repos/arrangements/$1
+!REPO_BRANCH = master
+!REPO_PATH = ..
+!CHECKOUT =
+Thorns/BowenID
+Thorns/PrimitiveSolverHydroBase
+Thorns/TwoPuncturesSolver
+Thorns/Broyden
+Thorns/TotalRestMass
+
+
+
+# Maya thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/arrangements/$1
+!AUTH_URL = https://www.numrel.org/git/repos/arrangements/$1
+!REPO_BRANCH = master
+!REPO_PATH = ..
+!CHECKOUT =
+#ExternalThorns/ReflectionSymmetry
+#ExternalThorns/RotatingSymmetry180
+#ExternalThorns/WeylScal4
+#ExternalThorns/NaNChecker
+#ExternalThorns/AHFinderDirect
+#ExternalThorns/TmunuBase
+#ExternalThorns/CarpetRegrid2
+
+GTThorns/ADM_EJP
+GTThorns/ExternalEtaBeta
+GTThorns/IHSpin
+GTThorns/Psi4Analysis
+GTThorns/RunStats
+GTThorns/ShiftTracker
+GTThorns/SphereIntegrate
+GTThorns/SphereRad
+#GTThorns/TeukolskyADMBase
+GTThorns/BowenID
+#GTThorns/PrimitiveSolverHydroBase
+#GTThorns/PrimitiveSolver
+#GTThorns/TwoPuncturesSolver
+#GTThorns/TwoPunctures
+#GTThorns/WaveExtract
+GTThorns/Ylm_Decomp
+#GTThorns/RegridBoxes
+#GTThorns/SwitchGrids
+GTThorns/MinTracker
+GTThorns/MinSearch
+GTThorns/AHMask
+GTThorns/WeightedReduce
+#GTThorns/Outflow
+#GTThorns/SphericalInfall
+#GTThorns/TotalRestMass
+#GTThorns/Bremsstrahlung
+#GTThorns/Cooler
+#GTThorns/Synchrotron
+#GTThorns/RNSID
+#GTThorns/MassDistribution
+#GTThorns/MakeParticles
+#GTThorns/SubspaceNorms
+#GTThorns/MatterAnalysis
+GTThorns/VectorAlgebra
+#GTThorns/RestAdjustNSBH
+#GTThorns/AdjustBBH
+#GTThorns/AdjustBNS
+GTThorns/OutputTable
+#GTThorns/Broyden
+GTThorns/ParameterTools
+GTThorns/BasicIntegrator
+#GTThorns/BoostedTOV
+#GTThorns/FunctionalToolkit
+
+#InfrastructureThorns/MoveIt
+
+# Kranc2BSSNChi
+!TARGET   = $ROOT
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/krancscripts
+!AUTH_URL = https://www.numrel.org/git/repos/krancscripts
+!REPO_BRANCH = master
+!REPO_PATH= ..
+!CHECKOUT = ./krancscripts
+
+# This does not actually check out anything (since the directories do not exist
+# in the repository) but does set up the directories and symbolic links
+
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/krancscripts
+!AUTH_URL = https://www.numrel.org/git/repos/krancscripts
+!REPO_BRANCH = $ET_RELEASE
+!REPO_PATH = $2
+!CHECKOUT =
+#Kranc/Kranc2BSSNChi
+Kranc/Kranc2BSSNChiMatter
+#Kranc/OutflowAnalysis
+
+# Scotch thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://www.numrel.org/git/repos/arrangements/$1/$2
+!REPO_BRANCH = master
+!REPO_PATH = ../$2
+!CHECKOUT = 
+#Scotch/EOS_Polytrope
+#Scotch/HydroBase
+#Scotch/ReconstructENO
+#Scotch/ReconstructPPM
+#Scotch/ReconstructTVD
+#Scotch/RecoverMHD
+#Scotch/RecoverMarti
+#Scotch/RiemannSolverHLL
+#Scotch/RiemannSolverHLLE
+#Scotch/RiemannSolverMarquina
+#Scotch/RiemannSolverROE
+#Scotch/SoundSpeed
+#Scotch/TracerHLLE
+#Scotch/Whisky
+##Scotch/Whisky_IVP
+#Scotch/Whisky_Init_Data
+#Scotch/Whisky_TOVSolverC
+
+# Various thorns from WVU
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/zach_etienne/wvuthorns.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+WVUThorns/IllinoisGRMHD
+WVUThorns/Convert_to_HydroBase
+WVUThorns/ID_converter_ILGRMHD
+WVUThorns/Seed_Magnetic_Fields
+WVUThorns_Diagnostics/VolumeIntegrals_GRMHD
+
+
+# Thorns developed at the University of Catania
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://bitbucket.org/eloisa/ctthorns.git
+!REPO_PATH= $2
+!REPO_BRANCH = $ET_RELEASE
+!CHECKOUT =
+CTThorns/CT_Analytic
+CTThorns/CT_MultiLevel
+

@@ -1,0 +1,142 @@
+# Parameter definitions for thorn BowenID
+# $Header:$
+
+restricted:
+KEYWORD compact_object[2] "type of object to construct"
+{
+	"black hole" :: "a puncture black hole"
+	"tov"        :: "a tov star"
+	"gaussian"   :: "a gaussian cloud"
+    "none"       :: "no object"
+} "none"
+
+REAL zero_epsilon "do not approach punctures closer than epsilon"
+{
+ 0.:* :: "positive"
+} 1e-6
+
+REAL bh_bare_mass[2] "bare masses of constructed bhs" STEERABLE=ALWAYS
+{
+ 0.:* :: "nonnegative"
+} 0.
+
+REAL tov_rho_central[2] "central rest mass density for tovs" STEERABLE=ALWAYS
+{
+ 0.:*  :: "nonnegative"
+} 0.
+
+REAL tov_rho_atmosphere[2] "atmospheric rest mass density for tovs" STEERABLE=ALWAYS
+{
+ 0.:*  :: "nonnegative"
+} 0.
+
+INT tov_numpoints "maximum number of points for rk4 integration of tov stars"
+{
+ 1:* :: "positive"
+} 100000
+
+CCTK_REAL tov_dr[2] "stepsize for the radial integration"
+{
+  (0:*	:: "anything positive"
+} 5e-4
+
+CCTK_REAL tov_Gamma[2] "The polytropic constant in P = K rho^Gamma"
+{
+  1.0:2.0 :: "The physical range is [1,2]"
+} 2.0
+
+CCTK_REAL tov_K[2] "The polytropic constant in P = K rho^Gamma" STEERABLE=ALWAYS
+{
+  (0.0:* :: "Greater than 0"
+} 100.0
+
+CCTK_REAL gaussian_amp[2] "Amplitude of Gaussian for nonflat conformal factor"
+{
+ 0.:* :: "positive"
+} 0.
+
+CCTK_REAL gaussian_radius[2] "Radius of Gaussian cloud"
+{
+ 0.:* :: "positive"
+} 0.
+
+REAL max_quadrature_error "maximum error for simpson integration"
+{
+	0.:* :: "positive"	
+} 1e-6
+
+REAL minimum_dr "minimum step size for simpson integration"
+{
+   0.:* :: "positive"
+} 1e-4
+
+REAL object_rx[2] "object x coordinate" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_ry[2] "object x coordinate" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_rz[2] "object x coordinate" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Px[2] "x-component of intrinsic linear momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Py[2] "y-component of intrinsic linear momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Pz[2] "z-component of intrinsic linear momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Jx[2] "x-component of intrinsic angular momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Jy[2] "y-component of intrinsic angular momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+REAL object_Jz[2] "z-component of intrinsic angular momentum" STEERABLE=ALWAYS
+{
+ *:*  :: "anything"
+} 0.
+
+BOOLEAN add_rhohats_first "add conformal densities, instead of adding rhos first"
+{
+} "yes"
+
+REAL rhohat_exponent "exponent for conformal density scaling"
+{
+ 0.:* :: "greater than or equal to 5"
+} 8.
+
+REAL sigma_exponent "conformal factor exponent for shs momentum dist"
+{
+ 0.:10. :: "zero to ten"
+} 8. 
+
+INT verbose "how much diagnostic information to print"
+{
+ 0:2 :: "0 is nothing, 1 is something, 2 reserved for more than something"
+} 1
+
+BOOLEAN testsuite "set to true to dump various internal data structures"
+{
+} "no"
+
+SHARES: IO
+USES CCTK_STRING out_dir

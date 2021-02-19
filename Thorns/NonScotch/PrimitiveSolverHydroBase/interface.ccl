@@ -1,0 +1,77 @@
+# Interface definition for thorn PrimitiveSolverHydroBase
+# $Header:$
+
+implements: PrimitiveSolverHydroBase
+#inherits: ADMBase Whisky HydroBase
+inherits: ADMBase HydroBase
+#friend: Whisky 
+
+USES INCLUDE: EOS_Base.h
+USES INCLUDE: EOS_Base.inc
+USES INCLUDE: HydroBase.h
+
+#SUBROUTINE Prim2ConPoly(CCTK_INT IN handle, \
+#                        CCTK_REAL IN gxx, CCTK_REAL IN gxy, CCTK_REAL IN gxz, \
+#			CCTK_REAL IN gyy, CCTK_REAL IN gyz, CCTK_REAL IN gzz, \
+#			CCTK_REAL IN det, CCTK_REAL OUT dens, \
+#			CCTK_REAL OUT sx, CCTK_REAL OUT sy, \
+#			CCTK_REAL OUT sz, CCTK_REAL OUT tau, \
+#			CCTK_REAL IN rho, CCTK_REAL IN velx, \
+#			CCTK_REAL IN vely, \
+#			CCTK_REAL IN velz, CCTK_REAL OUT epsilon, \
+#			CCTK_REAL OUT press, CCTK_REAL OUT w_lorentz)
+
+
+#SUBROUTINE Prim2ConGen(CCTK_INT IN handle, \
+#                          CCTK_REAL IN gxx, CCTK_REAL IN gxy, \
+#                          CCTK_REAL IN gxz, CCTK_REAL IN gyy, \
+#                          CCTK_REAL IN gyz, CCTK_REAL IN gzz, \
+#                          CCTK_REAL IN det, CCTK_REAL OUT dens, \
+#                          CCTK_REAL OUT sx, CCTK_REAL OUT sy, \
+#                          CCTK_REAL OUT sz, CCTK_REAL OUT tau, \
+#                          CCTK_REAL IN rho, CCTK_REAL IN velx, \
+#                          CCTK_REAL IN vely, \
+#                          CCTK_REAL IN velz, CCTK_REAL IN epsilon, \
+#                          CCTK_REAL OUT press, CCTK_REAL OUT w_lorentz)
+
+#void FUNCTION UpperMet(CCTK_REAL OUT uxx, CCTK_REAL OUT uxy, \
+#                       CCTK_REAL OUT uxz, CCTK_REAL OUT uyy, \
+#                       CCTK_REAL OUT uyz, CCTK_REAL OUT uzz, \
+#                       CCTK_REAL IN det, CCTK_REAL IN gxx, CCTK_REAL IN gxy, \
+#                       CCTK_REAL IN gxz, CCTK_REAL IN gyy, CCTK_REAL IN gyz, \
+#                       CCTK_REAL IN gzz)
+
+#USES FUNCTION Prim2ConPoly
+#USES FUNCTION Prim2ConGen
+#USES FUNCTION UpperMet
+
+#######################################################
+### functions to accees the initial data            ###
+#######################################################
+void FUNCTION getSourceInfo(CCTK_REAL IN xx, CCTK_REAL IN yy, CCTK_REAL IN zz, CCTK_REAL OUT rhohat, CCTK_REAL ARRAY OUT jhat, CCTK_REAL OUT psi, CCTK_REAL OUT psiguess, CCTK_REAL ARRAY OUT Aij)
+USES FUNCTION getSourceInfo
+
+CCTK_REAL FUNCTION getRho0W(CCTK_INT IN polyhandle, CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z, CCTK_REAL IN psiL)
+PROVIDES FUNCTION getRho0W WITH PrimitiveSolver_getRho0W LANGUAGE C
+
+CCTK_REAL FUNCTION getConformalFactor(CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+USES FUNCTION getConformalFactor
+
+
+int PrimitiveSolver_eos_scalars type = SCALAR
+{
+  PrimitiveSolver_eos_handle
+  PrimitiveSolver_polytrope_handle
+} "Handle number for EOS"
+
+
+
+## MHD Handle
+##   0  --  No MHD
+##   1  --  QuasiMHD (Sources only)
+##   2  --  Bvec evolved (above this, Bvec exists)
+##   3  --  Avec and Bvec exist, algebraic gauge A evolution
+##   4  --  Avec and Bvec exist, lorenz gauge A evolution
+
+
+

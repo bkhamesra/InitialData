@@ -1,0 +1,91 @@
+# Parameter definitions for thorn TotalRestMass
+# $Header:$
+
+CCTK_INT calc_mass_every "Calculate only every N iterations" STEERABLE=always
+{
+  0:* :: "Must be set to iterations no finer than the coarsest level encountered during integration"
+} 1 
+
+CCTK_INT calc_mass_every_vol[100] "Calculate only every N iterations"
+{
+ -1   :: "use calc_mass_every"
+  0:* :: "Must be set to iterations no finer than the coarsest level encountered during integration"
+} -1 
+
+CCTK_REAL rho_min "Atmospheric density"
+{
+  0:* :: "Should be equal to Whisky's rho_abs_min"
+} 0
+
+STRING dDdt_variable "Variable containing dD/dt"
+{
+  "^$"                        :: "disable dD/dt usage"
+  ".+[:][:].+"                :: "Any valid variable, really"
+} "Whisky::densrhs"
+
+CCTK_INT intvolumes "Number of spheres to integrate within, in addition to the full grid" STEERABLE=recover
+{
+  0:100 :: "Hard-coded because size of int_wi_rad"
+} 0
+
+CCTK_REAL int_wi_rad[100] "Integrate within radius, hard-coded max at 100" STEERABLE=recover
+{
+ 0:* :: "Anything positive"
+} 0
+
+CCTK_KEYWORD centre_from[100] "What controls the centre" STEERABLE=always
+{
+  "parameter"         :: "use parameters centre_x/y/z"
+  "spherical surface" :: "use spherical surfaces"
+} "parameter"
+
+CCTK_REAL centre_x[100] "x center" STEERABLE=always
+{
+ *:* :: "any real number"
+} 0
+
+CCTK_REAL centre_y[100] "x center" STEERABLE=always
+{
+ *:* :: "any real number"
+} 0
+
+CCTK_REAL centre_z[100] "x center" STEERABLE=always
+{
+ *:* :: "any real number"
+} 0
+
+CCTK_INT surface_index[100] "Which spherical surface to use" STEERABLE=always
+{
+ -1   :: "invalid"
+ 0:*  :: "any valid surface index"
+} -1
+
+STRING weight_var[100] "Variable containing the weights for integration" STEERABLE=always
+{
+ "CarpetReduce[:][:]weight"    :: "Standard Carpet weights"
+ "AHMask[:][:]AHmasked_weight" :: "Mask out AHs (if found)"
+  ".+[:][:].+"                 :: "Any other valid variable, really"
+} "AHMask::AHmasked_weight"
+
+STRING out_format "Which format for Scalar floating-point number output" STEERABLE=always
+{
+  ^(\.[1]?[0-9])?[EGefg]$ :: "output with given precision in exponential / floating point notation"
+} ".19g"
+
+## Debug ##
+BOOLEAN verbose "Debugging"
+{
+} "no"
+
+BOOLEAN debug "Debugging"
+{
+} "no"
+
+SHARES: SphericalSurface
+
+USES INT nsurfaces AS sphericalsurfaces_nsurfaces
+
+shares: IO
+
+USES STRING out_dir
+

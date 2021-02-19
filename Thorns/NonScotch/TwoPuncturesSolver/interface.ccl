@@ -1,0 +1,31 @@
+# Interface definition for thorn TwoPunctures
+# $Header: /numrelcvs/HerrmannCVS/TwoPunctures/interface.ccl,v 1.3 2004/10/25 13:41:10 herrmann Exp $
+
+IMPLEMENTS: TwoPuncturesSolver
+
+INHERITS: ADMBase grid
+
+void FUNCTION getSourceInfo(CCTK_REAL IN xx, CCTK_REAL IN yy, CCTK_REAL IN zz, CCTK_REAL OUT rhohat, CCTK_REAL ARRAY OUT jhat, CCTK_REAL OUT psi, CCTK_REAL OUT psiguess, CCTK_REAL ARRAY OUT Aij)
+USES FUNCTION getSourceInfo
+
+CCTK_REAL FUNCTION getU(CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+PROVIDES FUNCTION getU WITH TwoPuncturesSolver_GetU LANGUAGE C
+
+CCTK_REAL FUNCTION getConformalFactor(CCTK_REAL IN x, CCTK_REAL IN y, CCTK_REAL IN z)
+PROVIDES FUNCTION getConformalFactor WITH TwoPuncturesSolver_GetConformalFactor LANGUAGE C
+
+void FUNCTION recomputeTP(CCTK_INT IN resolve)
+PROVIDES FUNCTION recomputeTP WITH TwoPuncturesSolver_ForceResolve LANGUAGE C
+
+CCTK_REAL puncture_u TYPE=gf
+
+CCTK_REAL mass_group TYPE=SCALAR
+{
+  admMass, admMassRad, u_plus, u_minus, propsep
+} "mass"
+
+REAL precomputed_group TYPE=SCALAR
+{
+  par_b_pcmp,move_origin_x_pcmp
+} "values precomputed"
+

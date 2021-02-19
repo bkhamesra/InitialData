@@ -1,0 +1,10 @@
+# Schedule definitions for thorn BowenID
+# $Header:$
+
+#STORAGE: tov_mass_group
+
+SCHEDULE bowenid_constructSources IN ADMBase_InitialData
+{
+ OPTIONS: GLOBAL
+ LANG: C
+} "Construct the base sources for TwoPunctures"

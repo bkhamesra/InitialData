@@ -1,29 +1,30 @@
 ###############################################################
 # Simulation Description                                      #
 ###############################################################
-# Code Unit:               1 M = 18 Msun
-# Refinement Levels:       6 (Inside = 0, Outside = 5)
-# Finest Resolution:       0.0111111111111111 M
-# Final Time:              1000 M
-# Initial Separation:	   7 M (186096.353040695 m)
-# Hydrodynamics Evolution: Whisky
-# Bitant Symmetry:         yes
+# Code Unit:               1 M = 4.05 Msun
+# Refinement Levels:       9 (Inside = 2, Outside = 6)
+# Finest Resolution:       0.00934426229508197 M
+# Final Time:              800 M
+# Initial Separation:	   9 M (53835.016415344 m)
+# Hydrodynamics Evolution: IllinoisGRMHD
+# Bitant Symmetry:         no
 # 
 # BH
-#   Mass:        	       16 Msun = 0.888888888888889 M
-#   Isotropic Radius:	   11815.6414629058 metres = 0.444444444444444 M
-#   Boost Velocity:        (-0.00132737475912975, 0.0573386195170001, 0)
-#   Boost Momentum:        (-0.001179888674782, 0.050967661792889, 0) M
+#   Mass:        	       2.7 Msun = 0.666666666666667 M
+#   Isotropic Radius:	   1993.88949686536 metres = 0.333333333333333 M
+#   Boost Velocity:        (-0.0023056177287, 0.13815026067405, 0)
+#   Boost Momentum:        (-0.0015370784858, 0.0921001737827, 0) M
 # 
 # Star 2
-#   Mass:        	       2 Msun = 0.111111111111111 M
-#   Isotropic Radius:	   8860.31322020042 metres = 0.333279999999872 M
-#   Tidal Radius:          2.59041205544275 M
-#   Central Density:       2.55717429479709e+18 kg/m^3= 1.34211576240155 1/M^2
-#   Polytropic K:          0.629881582262534
+#   Mass:        	       1.35 Msun = 0.333333333333333 M
+#   Isotropic Radius:	   11339.4489576186 metres = 1.89569999999927 M
+#   Tidal Radius:          5.73223760228349 M
+#   ISCO Radius:          3.29965982852212 M
+#   Central Density:       9.10113521122565e+17 kg/m^3= 0.0241818904575279 1/M^2
+#   Polytropic K:          5.70964458889846
 #   Polytropic Gamma:      2
-#   Boost Velocity:        (0.010618998073038, -0.458708956136001, 0)
-#   Boost Momentum:        (0.001179888674782, -0.050967661792889, 0) M
+#   Boost Velocity:        (0.0046112354574, -0.2763005213481, 0)
+#   Boost Momentum:        (0.0015370784858, -0.0921001737827, 0) M
 ###############################################################
 
 
@@ -33,30 +34,33 @@
 
 # Grid structure:
 #	rl	Radius		Resolution								Npoints across Ref Lvl
-#	0 	25.6    	0.355556	(M/2.812     ,	m1/2.5       ,	rStar/0.9373    )	 144^3
-#	1 	6.4     	0.177778	(M/5.625     ,	m1/5         ,	rStar/1.875     )	  72^3
-#	2 	3.2     	0.0888889	(M/11.25     ,	m1/10        ,	rStar/3.749     )	  72^3
-#	3 	1.6     	0.0444444	(M/22.5      ,	m1/20        ,	rStar/7.499     )	  72^3
-#	4 	0.8     	0.0222222	(M/45        ,	m1/40        ,	rStar/15        )	  72^3
-#	5 	0.4     	0.0111111	(M/90        ,	m1/80        ,	rStar/30        )	  72^3
+#	0 	291.84  	2.39213 	(M/0.418     ,	m1/0.2787    ,	rStar/0.7925    )	 244^3
+#	1 	145.92  	1.19607 	(M/0.8361    ,	m1/0.5574    ,	rStar/1.585     )	 244^3
+#	2 	36.48   	0.598033	(M/1.672     ,	m1/1.115     ,	rStar/3.17      )	 122^3
+#	3 	18.24   	0.299016	(M/3.344     ,	m1/2.23      ,	rStar/6.34      )	 122^3
+#	4 	9.12    	0.149508	(M/6.689     ,	m1/4.459     ,	rStar/12.68     )	 122^3
+#	5 	4.56    	0.0747541	(M/13.38     ,	m1/8.918     ,	rStar/25.36     )	 122^3
+#	6 	2.28    	0.037377	(M/26.75     ,	m1/17.84     ,	rStar/50.72     )	 122^3
+#	7 	1.14    	0.0186885	(M/53.51     ,	m1/35.67     , ------------- )	 122^3
+#	8 	0.57    	0.00934426	(M/107       ,	m1/71.35     , ------------- )	 122^3
 
 
 ### Base Thorns
 ActiveThorns = "GenericFD CoordBase SymBase Boundary NaNChecker CartGrid3D Time MoL CarpetIOBasic CarpetIOScalar IOUtil Carpet CarpetLib Vectors CarpetReduce CarpetInterp CarpetSlab  CarpetIOASCII ADMBase  StaticConformal  SphericalSurface  AEILocalInterp SpaceMask  Slab CarpetIOHDF5  CarpetRegrid2 CarpetTracker TimerReport RunStats Dissipation InitBase  ReflectionSymmetry SphereIntegrate LoopControl GSL Nice HydroBase TmunuBase ADMCoupling ADMMacros EOS_Base Socket Formaline WeightedReduce SystemTopology ShiftTracker AHMask HDF5 MPI Timers CycleClock hwloc zlib"
 
 # Initial Data Thorns
-ActiveThorns = "PrimitiveSolver  BowenID TwoPuncturesSolver VectorAlgebra OutputTable VolumeIntegrals_GRMHD"
+ActiveThorns = "PrimitiveSolverHydroBase  BowenID TwoPuncturesSolver VectorAlgebra OutputTable"
 
 
 # Hydro Thorns
-ActiveThorns = "EOS_IdealFluid EOS_Polytrope MinSearch Whisky RiemannSolverMarquina ReconstructPPM RecoverMarti"
+ActiveThorns = "EOS_IdealFluid EOS_Polytrope IllinoisGRMHD Convert_To_HydroBase MinSearch ID_converter_ILGRMHD EOS_Omni"  
 
 
 # Spacetime Thorns
 ActiveThorns = "Kranc2BSSNChiMatter "
 
 # Analysis Thorns
-ActiveThorns = " AHFinderDirect Outflow TotalRestMass"
+ActiveThorns = "WeylScal4 Ylm_Decomp AHFinderDirect IHSpin ADM_EJP Outflow Psi4Analysis"
 
 
 
@@ -69,15 +73,15 @@ CartGrid3D::domain                      = "full"
 CartGrid3D::avoid_origin                = "no"
 
 CoordBase::domainsize                   = minmax
-CoordBase::xmin                         = -25.6
-CoordBase::ymin                         = -25.6
-CoordBase::zmin                         = -25.6
-CoordBase::xmax                         = 25.6
-CoordBase::ymax                         = 25.6
-CoordBase::zmax                         = 25.6
-CoordBase::dx                           = 0.3555555555555555691
-CoordBase::dy                           = 0.3555555555555555691
-CoordBase::dz                           = 0.3555555555555555691
+CoordBase::xmin                         = -291.84
+CoordBase::ymin                         = -291.84
+CoordBase::zmin                         = -291.84
+CoordBase::xmax                         = 291.84
+CoordBase::ymax                         = 291.84
+CoordBase::zmax                         = 291.84
+CoordBase::dx                           = 2.3921311475409834379
+CoordBase::dy                           = 2.3921311475409834379
+CoordBase::dz                           = 2.3921311475409834379
 CoordBase::boundary_size_x_lower        = 3
 CoordBase::boundary_size_y_lower        = 3
 CoordBase::boundary_size_z_lower        = 3
@@ -108,9 +112,9 @@ ReflectionSymmetry::avoid_origin_z      = "no"
 # Run statistics
 #############################################################
 
-RunStats::calc_every         = 8
-RunStats::output_mem_every   = 8
-TimerReport::out_every       = 1800
+RunStats::calc_every         = 64
+RunStats::output_mem_every   = 64
+TimerReport::out_every       = 2112
 TimerReport::out_filename    = "TimerReport"
 
 #############################################################
@@ -118,7 +122,7 @@ TimerReport::out_filename    = "TimerReport"
 #############################################################
 
 CarpetRegrid2::num_centres                     = 3
-CarpetRegrid2::regrid_every                    =4
+CarpetRegrid2::regrid_every                    = 64
 CarpetRegrid2::freeze_unaligned_levels         = "yes" 
 CarpetRegrid2::freeze_unaligned_parent_levels  = "yes" 
 CarpetRegrid2::min_distance                    = 0
@@ -126,37 +130,38 @@ CarpetRegrid2::snap_to_coarse                  = "yes"
 CarpetRegrid2::verbose                         = "no"
 CarpetRegrid2::symmetry_rotating180            = "no"
 
-CarpetRegrid2::num_levels_1    =  6
+CarpetRegrid2::num_levels_1    =  9
 CarpetTracker::surface     [0] = 0
-CarpetRegrid2::position_x_1    =  0.777777777777778
+CarpetRegrid2::position_x_1    =  3
 CarpetRegrid2::position_y_1    =  0
 CarpetRegrid2::position_z_1    =  0
-CarpetRegrid2::radius_1  [1]  =  6.4
-CarpetRegrid2::radius_1  [2]  =  3.2
-CarpetRegrid2::radius_1  [3]  =  1.6
-CarpetRegrid2::radius_1  [4]  =  0.8
-CarpetRegrid2::radius_1  [5]  =  0.4
+CarpetRegrid2::radius_1  [1]  =  145.92
+CarpetRegrid2::radius_1  [2]  =  36.48
+CarpetRegrid2::radius_1  [3]  =  18.24
+CarpetRegrid2::radius_1  [4]  =  9.12
+CarpetRegrid2::radius_1  [5]  =  4.56
+CarpetRegrid2::radius_1  [6]  =  2.28
+CarpetRegrid2::radius_1  [7]  =  1.14
+CarpetRegrid2::radius_1  [8]  =  0.57
 
 
-CarpetRegrid2::num_levels_2    =  6
+CarpetRegrid2::num_levels_2    =  7
 CarpetTracker::surface     [1] = 1
-CarpetRegrid2::position_x_2    =  -6.22222222222222
+CarpetRegrid2::position_x_2    =  -6
 CarpetRegrid2::position_y_2    =  0
 CarpetRegrid2::position_z_2    =  0
-CarpetRegrid2::radius_2  [1]  =  6.4
-CarpetRegrid2::radius_2  [2]  =  3.2
-CarpetRegrid2::radius_2  [3]  =  1.6
-CarpetRegrid2::radius_2  [4]  =  0.8
-CarpetRegrid2::radius_2  [5]  =  0.4
+CarpetRegrid2::radius_2  [1]  =  145.92
+CarpetRegrid2::radius_2  [2]  =  36.48
+CarpetRegrid2::radius_2  [3]  =  18.24
+CarpetRegrid2::radius_2  [4]  =  9.12
+CarpetRegrid2::radius_2  [5]  =  4.56
+CarpetRegrid2::radius_2  [6]  =  2.28
 
 
-CarpetRegrid2::num_levels_3    =  4
+CarpetRegrid2::num_levels_3    =  1
 CarpetRegrid2::position_x_3    =  0
 CarpetRegrid2::position_y_3    =  0
 CarpetRegrid2::position_z_3    =  0
-CarpetRegrid2::radius_3  [1]  =  6.4
-CarpetRegrid2::radius_3  [2]  =  3.2
-CarpetRegrid2::radius_3  [3]  =  1.6
 
 
 #############################################################
@@ -182,9 +187,6 @@ SphericalSurface::maxnphi    = 100
 
 ## Surfaces for Trackers: default (very low) resolution ##
 ## Surfaces for Tracking Binary ##
-SphericalSurface::ntheta[1]    = 120
-SphericalSurface::nphi[1]      = 100
-SphericalSurface::radius[1]      = 1.0
 
 ## Apparent Horizons ##
 SphericalSurface::ntheta[2]    = 120
@@ -202,17 +204,17 @@ SphericalSurface::radius[3]        = 1.5
 SphericalSurface::set_spherical[4] = "yes"
 SphericalSurface::ntheta[4]        = 120
 SphericalSurface::nphi[4]          = 90
-SphericalSurface::radius[4]        = 2
+SphericalSurface::radius[4]        = 4.4
 
 SphericalSurface::set_spherical[5] = "yes"
 SphericalSurface::ntheta[5]        = 120
 SphericalSurface::nphi[5]          = 90
-SphericalSurface::radius[5]        = 8.79993599999985
+SphericalSurface::radius[5]        = 13.0748399999991
 
 SphericalSurface::set_spherical[6] = "yes"
 SphericalSurface::ntheta[6]        = 120
 SphericalSurface::nphi[6]          = 90
-SphericalSurface::radius[6]        = 14
+SphericalSurface::radius[6]        = 18
 
 
 
@@ -220,7 +222,7 @@ SphericalSurface::radius[6]        = 14
 # Shift tracker
 #############################################################
 
-ShiftTracker::x0[0]              = 0.777777777777778
+ShiftTracker::x0[0]              = 3
 ShiftTracker::y0[0]              = 0.0
 ShiftTracker::z0[0]              = 0.0
 ShiftTracker::surface_index[0]   = 0
@@ -238,7 +240,7 @@ ShiftTracker::beta3_var          = "Kranc2BSSNChiMatter::beta3"
 # MinSearch
 #############################################################
 
-MinSearch::x0[0]               = -6.22222222222222
+MinSearch::x0[0]               = -6
 MinSearch::y0[0]               = 0.0
 MinSearch::z0[0]               = 0.0
 MinSearch::surface_index[0]    = 1
@@ -246,7 +248,7 @@ MinSearch::extra_variables[0] = "HydroBase::eps"
 MinSearch::weight_variable[0] = "AHMask::AHmasked_weight"
 
 MinSearch::nminima             = 1
-MinSearch::dist_cutoff         = 0.99984 
+MinSearch::dist_cutoff         = 5.6871 
 MinSearch::var                 = "HydroBase::rho" 	
 MinSearch::verbose             = 0
 MinSearch::track_maximum       = "yes"
@@ -254,7 +256,7 @@ MinSearch::find_global_minimum = "no"
 MinSearch::find_localized_minimum = "yes"
 MinSearch::interpolator_name   = "Lagrange polynomial interpolation"
 MinSearch::interpolator_pars   = "order=4"
-MinSearch::find_every          = 4
+MinSearch::find_every          = 64
 MinSearch::outfile_basename    = "MinSearch%d.asc"
 
 #############################################################
@@ -263,14 +265,14 @@ MinSearch::outfile_basename    = "MinSearch%d.asc"
 
 Carpet::ghost_size                      = 3
 Carpet::domain_from_coordbase           = "yes"
-Carpet::max_refinement_levels           = 6
+Carpet::max_refinement_levels           = 9
 Carpet::refinement_factor               = 2
 Carpet::prolongation_order_space        = 5
 Carpet::prolongation_order_time         = 2
 Carpet::use_buffer_zones                = "yes"
 Carpet::verbose                         = "no"
-Carpet::time_refinement_factors         = "[1,1,1,2,4,8]"
-Carpet::output_timers_every             = 8
+Carpet::time_refinement_factors         = "[1,1,1,2,4,8,16,32,64]"
+Carpet::output_timers_every             = 64
 Carpet::poison_new_timelevels           = "yes"
 Carpet::check_for_poison                = "no"
 Carpet::poison_value                    = 113
@@ -287,7 +289,7 @@ Carpet::grid_coordinates_filename = "grid.asc"
 
 CarpetLib::poison_new_memory            = "yes"
 CarpetLib::poison_value                 = 114
-CarpetLib::print_memstats_every         = 1800
+CarpetLib::print_memstats_every         = 2112
 CarpetLib::support_staggered_operators  = "yes"
 
 #############################################################
@@ -303,8 +305,8 @@ CarpetInterp::check_tree_search         = "no"
 
 Cactus::terminate                     = "any"
 Cactus::max_runtime                   = 2865
-Cactus::cctk_final_time               = 1
-Cactus::cctk_itlast                   = 10000
+Cactus::cctk_final_time               = 800
+Cactus::cctk_itlast                   = 10000000
 Cactus::cctk_timer_output             = "full"
 Cactus::highlight_warning_messages    = "no"
 
@@ -316,7 +318,7 @@ MethodOfLines::MoL_Intermediate_Steps = 4
 MethodOfLines::MoL_Num_Scratch_Levels = 1
 
 #############################################################
-# AdjustBNS
+# Adjust NSBH
 #############################################################
 
 
@@ -324,6 +326,16 @@ MethodOfLines::MoL_Num_Scratch_Levels = 1
 # Initial data
 #############################################################
 InitBase::initial_data_setup_method = "init_all_levels"
+
+HydroBase::initial_hydro = "PrimitiveSolverHydroBase"
+HydroBase::Initial_Aphi = "zero"
+HydroBase::Initial_Avec = "zero"
+HydroBase::Initial_Bvec = "zero"
+HydroBase::timelevels = 3
+
+ID_converter_ILGRMHD::Gamma_Initial = 2
+ID_converter_ILGRMHD::K_Initial = 5.70964458889846
+ID_converter_ILGRMHD::pure_hydro_run = "yes"
 
 
 ADMBase::metric_type = "physical"
@@ -338,17 +350,17 @@ ADMBase::lapse_timelevels = 3
 ADMBase::shift_timelevels = 3
 ADMBase::metric_timelevels = 3
 
-PrimitiveSolver::chiEps = 0.0001
-PrimitiveSolver::testsuite = "yes"
-PrimitiveSolver::conformal_density_power = 8
-PrimitiveSolver::verbose = 1
-
+PrimitiveSolverHydroBase::chiEps = 0.0001
+PrimitiveSolverHydroBase::testsuite = "yes"
+PrimitiveSolverHydroBase::conformal_density_power = 8
+PrimitiveSolverHydroBase::verbose = 1
+PrimitiveSolverHydroBase::PrimitiveSolver_rho_abs_min = 2.41818904575279e-12
 
 TwoPuncturesSolver::npoints_A = 32
 TwoPuncturesSolver::npoints_B = 32
 TwoPuncturesSolver::use_full_transform = "yes"
-TwoPuncturesSolver::par_b = 3.5
-TwoPuncturesSolver::move_origin_x = 2.72222222222222
+TwoPuncturesSolver::par_b = 4.5
+TwoPuncturesSolver::move_origin_x = 1.5
 TwoPuncturesSolver::grid_setup_method = "evaluation"
 TwoPuncturesSolver::keep_u_around = "yes"
 TwoPuncturesSolver::Newton_tol = 1e-12
@@ -363,90 +375,51 @@ BowenID::zero_epsilon = 1e-06
 
 BowenID::compact_object[0] = "black hole"
 BowenID::compact_object[1] = "TOV"
-BowenID::bh_bare_mass[0]    = 0.881452
-BowenID::tov_rho_central[1] = 0.845374000000976
-BowenID::tov_rho_atmosphere[0] = 0.0 #8.45374000000976e-11
-BowenID::tov_rho_atmosphere[1] = 0.0 #8.45374000000976e-11
-BowenID::object_rx[0] = 0.777777777777778
-BowenID::object_rx[1] = -6.22222222222222
-BowenID::tov_Gamma[0] = 2
+BowenID::bh_bare_mass[0]    = 0.653196
+BowenID::tov_rho_central[1] = 0.13807000000016
+BowenID::tov_rho_atmosphere[0] = 0.0 #1.3807000000016e-11
+BowenID::tov_rho_atmosphere[1] = 0.0 #1.3807000000016e-11
+BowenID::object_rx[0] = 3
+BowenID::object_rx[1] = -6
 BowenID::tov_Gamma[1] = 2
-BowenID::tov_K[0] = 0.629881582262534
-BowenID::tov_K[1] = 0.629881582262534
-BowenID::object_Px[0] = -0.001179888674782
-BowenID::object_Py[0] = 0.050967661792889
+BowenID::tov_K[1] = 5.70964458889846
+BowenID::object_Px[0] = -0.0015370784858
+BowenID::object_Py[0] = 0.0921001737827
 BowenID::object_Pz[0] = 0
-BowenID::object_Px[1] = 0.001179888674782
-BowenID::object_Py[1] = -0.050967661792889
+BowenID::object_Px[1] = 0.0015370784858
+BowenID::object_Py[1] = -0.0921001737827
 BowenID::object_Pz[1] = 0
  
 
-HydroBase::initial_hydro = "PrimitiveSolver"
-
-EOS_Polytrope::eos_k = 0.629881582262534
+EOS_Polytrope::eos_k = 5.70964458889846
 EOS_Polytrope::eos_gamma = 2
 EOS_IdealFluid::eos_ideal_fluid_gamma = 2
 
 #############################################################
-# Scotch Evolution
+# IllinoisGRMHD Evolution
 #############################################################
 
+TmunuBase::timelevels               = 1
 TmunuBase::stress_energy_storage    = "yes"
-TmunuBase::stress_energy_2_storage  = "no"
 TmunuBase::stress_energy_at_RHS     = "yes"
-TmunuBase::disable_calcTmunu_inc    = "yes"
 TmunuBase::prolongation_type        = "none"
 
-HydroBase::prolongation_type = "ENO"
-HydroBase::evolution_method  = "Scotch_HD"
-HydroBase::timelevels	     = 3
+Convert_To_HydroBase::convert_to_HydroBase_every = 1
 
-Whisky::whisky_evolve        = "yes"
-Whisky::whisky_eos_type      = "General"
-Whisky::whisky_eos_table     = "Ideal_Fluid"
-Whisky::whisky_stencil       = 3
-Whisky::bound                = "flat"
-Whisky::rho_abs_min          = 1.34211576240155e-10
-Whisky::initial_atmosphere_factor  = 0.999
-Whisky::wk_atmosphere        = "no"
-Whisky::recon_method         = "ppm"
-Whisky::riemann_solver       = "Marquina"
-Whisky::whisky_check_final_updates = "yes"
-Whisky::whisky_clear_all_nans_everywhere = "yes"
-Whisky::sync_primitives      = "yes"
-Whisky::initial_prim2con     = "yes"
-Whisky::kill_isolated_cells  = "yes"
-
-RecoverMarti::puncture_trick = "yes"
-RecoverMarti::puncture_tau_min = -1
-RecoverMarti::number_of_punctures = 1
-RecoverMarti::puncture_center_from[0] = "spherical surface"
-RecoverMarti::puncture_surface[0]     = 2
-RecoverMarti::puncture_radius_from[0] = "spherical surface"
-RecoverMarti::puncture_radius_surface[0] = 2
-RecoverMarti::puncture_radius_factor[0]  = 0.8
-RecoverMarti::impose_s2_limit            = "yes"
-RecoverMarti::recalc_rho_after_limit     = "yes"
-RecoverMarti::check_zsymmetry            = "no"
-RecoverMarti::warn_if_speed_above        = 0.98
-RecoverMarti::atmo_tolerance             = 0.001
-RecoverMarti::reset_pressure             = "yes"
-RecoverMarti::press_tolerance            = 0.001
-
-RiemannSolverMarquina::speed_limiter = "yes"
-RiemannSolverMarquina::speed_limit   = 0.999
-
-ReconstructPPM::ppm_detect = "no"
-ReconstructPPM::ppm_epsilon = 0.0
-ReconstructPPM::ppm_omega1 = 0.52
-ReconstructPPM::ppm_omega2 = 0.0
-ReconstructPPM::ppm_epsilon_shock = 0.1
-ReconstructPPM::ppm_eta1 = 5.0
-ReconstructPPM::ppm_k0 = 0.2
-ReconstructPPM::ppm_unroll = "no"
+IllinoisGRMHD::neos = 1
+IllinoisGRMHD::gamma_th = 2
+IllinoisGRMHD::K_poly = 5.70964458889846
+IllinoisGRMHD::conserv_to_prims_debug = 0
+IllinoisGRMHD::Psi6threshold = 100000
+IllinoisGRMHD::damp_lorenz = 0.1
+IllinoisGRMHD::tau_atm = 2.41818904575279e-12
+IllinoisGRMHD::rho_b_atm = 2.41818904575279e-12
+IllinoisGRMHD::rho_b_max = 100
+IllinoisGRMHD::update_Tmunu = "yes"
+IllinoisGRMHD::verbose = "no"
+IllinoisGRMHD::Symmetry = "none"
 
 SpaceMask::use_mask                 = "yes"
-
 
 
 
@@ -480,7 +453,7 @@ Kranc2BSSNChiMatter::boundary_condition       = "radiative"
 Kranc2BSSNChiMatter::couple_matter            = "yes"
 Kranc2BSSNChiMatter::recalculate_constraints  = "matter"
 Kranc2BSSNChiMatter::constraintsfdorder       = 4
-Kranc2BSSNChiMatter::mol_register_tmunu       = "no"
+Kranc2BSSNChiMatter::mol_register_tmunu       = no
 
 
 
@@ -502,12 +475,15 @@ Kranc2BSSNChiMatter::chi_group_bound    = "none"
 
 Dissipation::order                 = 5
 Dissipation::epsdis                = 0.0
-Dissipation::epsdis_for_level[0] = 0.1
-Dissipation::epsdis_for_level[1] = 0.1
+Dissipation::epsdis_for_level[0] = 0.5
+Dissipation::epsdis_for_level[1] = 0.5
 Dissipation::epsdis_for_level[2] = 0.1
 Dissipation::epsdis_for_level[3] = 0.1
 Dissipation::epsdis_for_level[4] = 0.1
 Dissipation::epsdis_for_level[5] = 0.1
+Dissipation::epsdis_for_level[6] = 0.1
+Dissipation::epsdis_for_level[7] = 0.1
+Dissipation::epsdis_for_level[8] = 0.1
 
 Dissipation::vars                  = "Kranc2BSSNChiMatter::A_group Kranc2BSSNChiMatter::alpha_group Kranc2BSSNChiMatter::beta_group Kranc2BSSNChiMatter::betat_group Kranc2BSSNChiMatter::Gam_group Kranc2BSSNChiMatter::h_group Kranc2BSSNChiMatter::K_group Kranc2BSSNChiMatter::chi_group"
 
@@ -516,9 +492,9 @@ Dissipation::vars                  = "Kranc2BSSNChiMatter::A_group Kranc2BSSNChi
 #############################################################
 
 
-AHFinderDirect::find_every = 4
+AHFinderDirect::find_every = 2
 AHFinderDirect::N_horizons = 1
-AHFinderDirect::output_h_every = 1024
+AHFinderDirect::output_h_every = 512
 AHFinderDirect::move_origins = "yes"
 AHFinderDirect::verbose_level = "physics highlights"
 
@@ -530,15 +506,15 @@ AHFinderDirect::verbose_level = "physics highlights"
 #AHFinderDirect::mask_buffer_thickness = 0
 #AHFinderDirect::mask_radius_multiplier = 1.0
 
-AHFinderDirect::origin_x[1] = 0.777777777777778
+AHFinderDirect::origin_x[1] = 3
 AHFinderDirect::origin_y[1] = 0
 AHFinderDirect::origin_z[1] = 0
-AHFinderDirect::initial_guess__coord_sphere__x_center[1] = 0.777777777777778
+AHFinderDirect::initial_guess__coord_sphere__x_center[1] = 3
 AHFinderDirect::initial_guess__coord_sphere__y_center[1] = 0
 AHFinderDirect::initial_guess__coord_sphere__z_center[1] = 0
-AHFinderDirect::initial_guess__coord_sphere__radius[1]   = 0.444444444444444
+AHFinderDirect::initial_guess__coord_sphere__radius[1]   = 0.333333333333333
 AHFinderDirect::which_surface_to_store_info[1]   = 2
-AHFinderDirect::max_allowable_horizon_radius[1]   = 3.55555555555556
+AHFinderDirect::max_allowable_horizon_radius[1]   = 2.66666666666667
 AHFinderDirect::reset_horizon_after_not_finding[1]   = "no"
 AHFinderDirect::find_after_individual_time[1]        = 0
 AHFinderDirect::dont_find_after_individual_time[1]   = 10000000000
@@ -549,62 +525,138 @@ AHFinderDirect::dont_find_after_individual_time[1]   = 10000000000
 # Check for NaNs 
 #############################################################
 
-NaNChecker::check_every = 1800
+NaNChecker::check_every = 2112
 NaNChecker::action_if_found = "terminate" # "just warn", "abort"
 NaNChecker::check_vars = "TmunuBase::stress_energy_vector TmunuBase::stress_energy_tensor TmunuBase::stress_energy_scalar HydroBase::rho HydroBase::press HydroBase::eps HydroBase::vel Kranc2BSSNChiMatter::A_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi Kranc2BSSNChiMatter::h_group Kranc2BSSNChiMatter::beta_group Kranc2BSSNChiMatter::Gam_group Kranc2BSSNChiMatter::betat_group"
 NaNChecker::verbose = "all"
 NaNChecker::ignore_restricted_points = "yes"
 
 #############################################################
-# VolumeIntegrals_GRMHD 
-#############################################################
-
-VolumeIntegrals_GRMHD::NumIntegrals                   = 3
-VolumeIntegrals_GRMHD::VolIntegral_out_every             = 4		 
-VolumeIntegrals_GRMHD::enable_file_output 	      	      = 1   		 
-VolumeIntegrals_GRMHD::verbose		     	      = 1   		 
-
-VolumeIntegrals_GRMHD::integration_quantity_keyword[1] = "centerofmass" 
-VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial [1]      =  -6.22222222222222
-VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius    [1]      = 2.0
-VolumeIntegrals_GRMHD::volintegral_sphere__tracks__amr_centre[1] = 1 # CarpetRegrid2::*_2
-
-VolumeIntegrals_GRMHD::Integration_quantity_keyword[2] = "restmass" 
-VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial [2]      =  -6.22222222222222
-VolumeIntegrals_GRMHD::volintegral_outside_sphere__radius    [2]      = 1.0
-VolumeIntegrals_GRMHD::volintegral_sphere__tracks__amr_centre[2] =  1     
-
-VolumeIntegrals_GRMHD::Integration_quantity_keyword[3] = "restmass" 
-VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial [3]      = -6.22222222222222 
-VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius    [3]      = 1.0
-VolumeIntegrals_GRMHD::volintegral_sphere__tracks__amr_centre[3] =  1     
-
-#############################################################
 # TotalRestMass 
 #############################################################
 
-TotalRestMass::dDdt_variable         = "Whisky::densrhs"
-TotalRestMass::rho_min               = 6.90052798971926e-11 
-TotalRestMass::intvolumes          = 5
-TotalRestMass::int_wi_rad[0]      = 0.686818549875681
-TotalRestMass::centre_x[0]        = -6.22222222222222  
-TotalRestMass::int_wi_rad[1]      = 4.50018100275353
-TotalRestMass::centre_x[1]        = -6.22222222222222  
-TotalRestMass::int_wi_rad[2]      = 12.
-TotalRestMass::centre_x[2]        = 0.0 
-TotalRestMass::int_wi_rad[3]      = 20.
-TotalRestMass::centre_x[3]        = 0.0
 
-TotalRestMass::int_wi_rad[4]     = 0.686818549875681
-TotalRestMass::weight_var[4]     = "CarpetReduce::weight"
-TotalRestMass::centre_x[4]       = -6.22222222222222  
 
+#############################################################
+# Wave extraction
+#############################################################
+
+## TODO: Add or replace with Multipole ##
+Ylm_Decomp::distribute_spheres       = "yes"
+Ylm_Decomp::number_of_detectors      = 10
+
+Ylm_Decomp::detector_radius[0]       = 50
+Ylm_Decomp::detector_radius[1]       = 60
+Ylm_Decomp::detector_radius[2]       = 70
+Ylm_Decomp::detector_radius[3]       = 80
+Ylm_Decomp::detector_radius[4]       = 90
+Ylm_Decomp::detector_radius[5]       = 100
+Ylm_Decomp::detector_radius[6]       = 110
+Ylm_Decomp::detector_radius[7]       = 120
+Ylm_Decomp::detector_radius[8]       = 130
+Ylm_Decomp::detector_radius[9]       = 140
+
+Ylm_Decomp::out_every_det[0]         = 64
+Ylm_Decomp::out_every_det[1]         = 64
+Ylm_Decomp::out_every_det[2]         = 64
+Ylm_Decomp::out_every_det[3]         = 64
+Ylm_Decomp::out_every_det[4]         = 64
+Ylm_Decomp::out_every_det[5]         = 64
+Ylm_Decomp::out_every_det[6]         = 64
+Ylm_Decomp::out_every_det[7]         = 64
+Ylm_Decomp::out_every_det[8]         = 64
+Ylm_Decomp::out_every_det[9]         = 64
+
+
+Ylm_Decomp::gridfunctions            = "WeylScal4::Psi4r{sw=-2 cmplx='WeylScal4::Psi4i'}"
+Ylm_Decomp::verbose                  = 0
+Ylm_Decomp::l_mode                   = 8
+Ylm_Decomp::m_mode                   = 8
+Ylm_Decomp::interpolation_operator   = "Lagrange polynomial interpolation"
+Ylm_Decomp::interpolation_order      = 4
+Ylm_Decomp::ntheta                   = 300
+Ylm_Decomp::nphi                     = 600
+
+WeylScal4::offset                    = 1e-8
+WeylScal4::fd_order                  = "4th"
+WeylScal4::verbose                   = 0
+
+
+#############################################################
+# Psi4Analysis
+#############################################################
+Psi4Analysis::out_offset       	       = 0
+Psi4Analysis::number_of_detectors      = 10
+
+Psi4Analysis::detector_radius[0]       = 50
+Psi4Analysis::detector_radius[1]       = 60
+Psi4Analysis::detector_radius[2]       = 70
+Psi4Analysis::detector_radius[3]       = 80
+Psi4Analysis::detector_radius[4]       = 90
+Psi4Analysis::detector_radius[5]       = 100
+Psi4Analysis::detector_radius[6]       = 110
+Psi4Analysis::detector_radius[7]       = 120
+Psi4Analysis::detector_radius[8]       = 130
+Psi4Analysis::detector_radius[9]       = 140
+
+Psi4Analysis::out_every_det[0]         = 64
+Psi4Analysis::out_every_det[1]         = 64
+Psi4Analysis::out_every_det[2]         = 64
+Psi4Analysis::out_every_det[3]         = 64
+Psi4Analysis::out_every_det[4]         = 64
+Psi4Analysis::out_every_det[5]         = 64
+Psi4Analysis::out_every_det[6]         = 64
+Psi4Analysis::out_every_det[7]         = 64
+Psi4Analysis::out_every_det[8]         = 64
+Psi4Analysis::out_every_det[9]         = 64
+
+
+Psi4Analysis::interpolator_name   = "Lagrange polynomial interpolation"
+Psi4Analysis::interpolator_pars      = "order=4"
+Psi4Analysis::maxntheta                   = 300
+Psi4Analysis::maxnphi                     = 600
+
+
+#######################V######################################
+# ADM_EJP
+#############################################################
+
+ADM_EJP::number_of_detectors   = 4
+ADM_EJP::out_every             = 64
+ADM_EJP::detector_radius[0]   = 14.6870999999978
+ADM_EJP::detector_radius[1]   = 60.8792499999982
+ADM_EJP::detector_radius[2]   = 107.071399999999
+ADM_EJP::detector_radius[3]   = 153.263549999999
+ADM_EJP::interpolator_name        = "Lagrange polynomial interpolation"
+ADM_EJP::interpolator_pars        = "order=4"
+ADM_EJP::ntheta                   = 120
+ADM_EJP::nphi                     = 240
+ 
+#############################################################
+# IHSpin
+#############################################################
+
+IHSpin::compute_every          = 32
+IHSpin::num_horizons           = 1
+IHSpin::surface_index[0]                  = 2
+IHSpin::compute_every_individual[0]       = 32
+IHSpin::interpolator_name      = "Lagrange polynomial interpolation"
+IHSpin::interpolator_pars      = "order=4"
+IHSpin::verbose                = 0
+
+
+
+#############################################################
+# SphereRad
+#############################################################
+
+ 
 
 #######################V######################################
 # Outflow
 #############################################################
 
-Outflow::compute_every            = 4
+Outflow::compute_every            = 2
 Outflow::num_detectors            = 5
 Outflow::interpolator_name        = "Lagrange polynomial interpolation"
 Outflow::interpolator_pars        = "order=4"
@@ -612,20 +664,20 @@ Outflow::verbose                  = 0
 
 # AH Fluxes
 Outflow::surface_index[0]       =  2
-Outflow::compute_every_det[0]   =  4
+Outflow::compute_every_det[0]   =  2
 
 # Integration Volume Boundary Fluxes
 Outflow::surface_index[1]       =  3
-Outflow::compute_every_det[1]   =  8
+Outflow::compute_every_det[1]   =  64
 
 Outflow::surface_index[2]       =  4
-Outflow::compute_every_det[2]   =  8
+Outflow::compute_every_det[2]   =  64
 
 Outflow::surface_index[3]       =  5
-Outflow::compute_every_det[3]   =  8
+Outflow::compute_every_det[3]   =  64
 
 Outflow::surface_index[4]       =  6
-Outflow::compute_every_det[4]   =  8
+Outflow::compute_every_det[4]   =  64
 
 Outflow::output_2d_data           = "no"
 Outflow::extra_variables          = "HydroBase::eps HydroBase::rho"
@@ -643,32 +695,32 @@ IO::out_fileinfo                     = "all"
 Carpet::grid_structure_filename      = "carpetgrid.asc"
 
 CarpetIOBasic::outInfo_every         = 2
-CarpetIOBasic::outInfo_vars          = " Carpet::physical_time_per_hour Kranc2BSSNChiMatter::alpha HydroBase::rho VolumeIntegrals_GRMHD::VolIntegrals"
+CarpetIOBasic::outInfo_vars          = " Carpet::physical_time_per_hour Kranc2BSSNChiMatter::alpha HydroBase::rho"
 CarpetIOBasic::real_max              = 1e6
 CarpetIOBasic::int_width             = 12
 
-CarpetIOScalar::outScalar_every      = 14336
+CarpetIOScalar::outScalar_every      = 17408
 CarpetIOScalar::outScalar_reductions = "minimum maximum norm2"
-CarpetIOScalar::outScalar_vars       = " HydroBase::eps  HydroBase::rho Whisky::w_lorentz Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi VolumeIntegrals_GRMHD::VolIntegrals"
+CarpetIOScalar::outScalar_vars       = " HydroBase::eps  HydroBase::rho HydroBase::w_lorentz Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi"
 
-CarpetIOASCII::out0D_every           = 2
+CarpetIOASCII::out0D_every           = 17408
 CarpetIOASCII::out0D_vars            = "Carpet::timing"
 
-CarpetIOASCII::out1D_every           = 14336
+CarpetIOASCII::out1D_every           = 17408
 CarpetIOASCII::out1D_x               = "yes"
 CarpetIOASCII::out1D_y               = "yes"
 CarpetIOASCII::out1D_z               = "no"
 CarpetIOASCII::out1D_d               = "no"
-CarpetIOASCII::out1D_vars            = " HydroBase::eps HydroBase::rho Whisky::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift ADMBase::metric  ADMBase::curv Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi "
+CarpetIOASCII::out1D_vars            = " HydroBase::eps HydroBase::rho HydroBase::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift ADMBase::metric  ADMBase::curv Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi  IllinoisGRMHD::rho_b IllinoisGRMHD::vx IllinoisGRMHD::vy IllinoisGRMHD::vz"
 CarpetIOASCII::out_precision         = 7
 
 CarpetIOHDF5::compression_level      = 0
 IO::out_single_precision             = "yes"
-CarpetIOHDF5::out2D_every            = 896
+CarpetIOHDF5::out2D_every            = 1088
 CarpetIOHDF5::out2D_xy               = "yes"
 CarpetIOHDF5::out2D_xz               = "no"
 CarpetIOHDF5::out2D_yz               = "no"
-CarpetIOHDF5::out2d_vars             = " HydroBase::eps HydroBase::rho Whisky::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi"
+CarpetIOHDF5::out2d_vars             = " HydroBase::eps HydroBase::rho HydroBase::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi IllinoisGRMHD::rho_b IllinoisGRMHD::vx IllinoisGRMHD::vy"
 
 CarpetIOHDF5::out_every              = 0
 CarpetIOHDF5::out_vars               = ""
@@ -683,7 +735,7 @@ CarpetIOHDF5::open_one_input_file_at_a_time = "yes"
 IO::checkpoint_every_walltime_hours = 11.75
 IO::checkpoint_keep            = 2
 IO::checkpoint_dir             = checkpoints
-IO::checkpoint_on_terminate    = "no"
+IO::checkpoint_on_terminate    = "yes"
 IO::checkpoint_id              = "no"
 
 IO::recover                    = "autoprobe"

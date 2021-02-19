@@ -1,0 +1,48 @@
+shares: BowenID
+USES KEYWORD compact_object
+USES REAL object_rx
+USES REAL object_ry
+USES REAL object_rz
+USES REAL bh_bare_mass
+USES REAL tov_rho_central
+
+restricted:
+
+BOOLEAN test_integrator "test the integrator only"
+{
+} "no"
+
+CCTK_REAL integration_radius[2] "radius of basic integrator boxes if needed"
+{
+	0:* :: "any positive value"
+} 1
+
+CCTK_INT integration_npoints[2] "number of points for basic integrator boxes"
+{
+	1:* :: "any positive number of points"
+} 10
+
+CCTK_REAL initial_guess[2] "center for the initial broyden stencil"
+{
+	0:* :: "any positive value"
+} .5
+
+CCTK_INT max_iterations "max iterations for the broyden solver"
+{
+	1:20 :: "no more than 20; let's not get crazy with the stack"
+} 10
+
+CCTK_REAL tolerance[2] "convergence tolerance for the broyden solver"
+{
+	0:* :: "something positive"
+} 0.01
+
+CCTK_REAL target[2] "target masses"
+{
+	0:* :: "something positive"
+} 0.5
+
+CCTK_REAL range[2] "percent ranges for the parameter iteration"
+{
+	0:* :: "something positive"
+} 0.1
