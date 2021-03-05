@@ -10,15 +10,17 @@
 # Bitant Symmetry:         yes
 # 
 # BH
-#   Mass:        	       4.05 Msun = 0.75 M
+#   Target Mass:        	       4.05 Msun = 0.75 M
 #   Isotropic Radius:	   2990.83424529804 metres = 0.375 M
 #   Boost Velocity:        (-0.00113558296528533, 0.104042578589201, 0)
 #   Boost Momentum:        (-0.000851687223964, 0.0780319339419009, 0) M
 # 
 # Star 2
-#   Mass:        	       1.35 Msun = 0.25 M
-#   Isotropic Radius:	   11312.7707161506 metres = 1.41842999999946 M
-#   Schwarzschild Radius:  13394.5165707877 metres = 1.67944570045701 M
+#   Target Mass:        	       1.35 Msun = 0.25 M
+#   ADM Mass (Isolated TOV): 1.39 Msun = 0.257973 M
+#   Rest Mass (Isolated TOV): 1.50304 Msun = 0.278341 M              
+#   Isotropic Radius (Isolated TOV):   11312.7707161506 metres = 1.41842999999946 M
+#   Schwarzschild Radius (Isolated TOV):  13394.5165707877 metres = 1.67944570045701 M
 #   Tidal Radius:          4.90975213922485 M
 #   ISCO Radius:          3.71211730708738 M
 #   Central Density:       9.16830444987444e+17 kg/m^3= 0.04330730739605 1/M^2
@@ -781,7 +783,7 @@ Outflow::compute_every_det[0]   =  8
 Outflow::surface_index[1]       =  1
 Outflow::compute_every_det[1]   =  64
 Outflow::override_radius[1]   =  "yes"
-Outflow::radius[1]   =  1.5
+Outflow::radius[1]   =  2.0
 
 
 
@@ -791,7 +793,7 @@ Outflow::surface_index[2]       =  3
 Outflow::compute_every_det[2]   =  64
 
 Outflow::surface_index[3]       =  4
-Outflow::compute_every_d et[3]   =  64
+Outflow::compute_every_det[3]   =  64
 
 Outflow::surface_index[4]       =  5
 Outflow::compute_every_det[4]   =  64

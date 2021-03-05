@@ -853,7 +853,10 @@ my @AH_y_initial = ( 0, 0 );
 my @AH_z_initial = ( 0, 0 );
 my @start_ah_times = ( 0,  0 ); 
 my @stop_ah_times = ( 1e10, 1e10 );
-my $AH_find_every = 1; ## Implemented 
+
+##Do not reduce AH_find_every below 8! The significant change in black hole mass only occurs about 8th iteration (even during merger) for NSBH and more frequent computation leads to higher round off 
+#and truncation errors which can lead to high frequency noise in mass derivatives. 
+my $AH_find_every = 8; 
 
 ## AHFinder detector frequency given the current grid structure
 #@AH_det_rad = ( $AH_radius_initial[0], $AH_radius_initial[1], $AH_radius_initial[2] ); #This was too coarse

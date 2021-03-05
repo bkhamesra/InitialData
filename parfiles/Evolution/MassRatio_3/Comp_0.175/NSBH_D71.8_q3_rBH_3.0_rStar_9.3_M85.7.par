@@ -311,7 +311,7 @@ CarpetInterp::check_tree_search         = "no"
 #############################################################
 
 Cactus::terminate                     = "any"
-Cactus::max_runtime                   = 2865
+Cactus::max_runtime                   = 1410
 Cactus::cctk_final_time               = 1500
 Cactus::cctk_itlast                   = 10000000
 Cactus::cctk_timer_output             = "full"
@@ -788,25 +788,25 @@ Outflow::compute_every_det[0]   =  8
 Outflow::surface_index[1]       =  1
 Outflow::compute_every_det[1]   =  64
 Outflow::override_radius[1]   =  "yes"
-Outflow::radius[1]   =  1.5
+Outflow::radius[1]   =  1.4
 
 
 
 # Integration Volume Boundary Fluxes
-Outflow::surface_index[1]       =  3
-Outflow::compute_every_det[1]   =  64
-
-Outflow::surface_index[2]       =  4
+Outflow::surface_index[2]       =  3
 Outflow::compute_every_det[2]   =  64
 
-Outflow::surface_index[3]       =  5
+Outflow::surface_index[3]       =  4
 Outflow::compute_every_det[3]   =  64
 
-Outflow::surface_index[4]       =  6
+Outflow::surface_index[4]       =  5
 Outflow::compute_every_det[4]   =  64
 
-Outflow::surface_index[5]       =  7
+Outflow::surface_index[5]       =  6
 Outflow::compute_every_det[5]   =  64
+
+Outflow::surface_index[6]       =  7
+Outflow::compute_every_det[6]   =  64
 
 Outflow::output_2d_data           = "no"
 Outflow::extra_variables          = "HydroBase::eps HydroBase::rho"

@@ -788,20 +788,20 @@ Outflow::radius[1]   =  1.5
 
 
 # Integration Volume Boundary Fluxes
-Outflow::surface_index[1]       =  3
-Outflow::compute_every_det[1]   =  64
-
-Outflow::surface_index[2]       =  4
+Outflow::surface_index    [2]       =  3
 Outflow::compute_every_det[2]   =  64
 
-Outflow::surface_index[3]       =  5
+Outflow::surface_index    [3]       =  4
 Outflow::compute_every_det[3]   =  64
 
-Outflow::surface_index[4]       =  6
+Outflow::surface_index[4]       =  5
 Outflow::compute_every_det[4]   =  64
 
-Outflow::surface_index[5]       =  7
+Outflow::surface_index[5]       =  6
 Outflow::compute_every_det[5]   =  64
+
+Outflow::surface_index[6]       =  7
+Outflow::compute_every_det[6]   =  64
 
 Outflow::output_2d_data           = "no"
 Outflow::extra_variables          = "HydroBase::eps HydroBase::rho"

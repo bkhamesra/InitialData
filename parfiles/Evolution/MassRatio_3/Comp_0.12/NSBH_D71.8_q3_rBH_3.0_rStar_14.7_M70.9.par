@@ -79,9 +79,9 @@ CoordBase::zmin                         = 0
 CoordBase::xmax                         = 281.6
 CoordBase::ymax                         = 281.6
 CoordBase::zmax                         = 281.6
-CoordBase::dx                           = 3.6102564102564107529
-CoordBase::dy                           = 3.6102564102564107529
-CoordBase::dz                           = 3.6102564102564107529
+CoordBase::dx                           = 1.8051282051282054
+CoordBase::dy                           = 1.8051282051282054
+CoordBase::dz                           = 1.8051282051282054
 CoordBase::boundary_size_x_lower        = 3
 CoordBase::boundary_size_y_lower        = 3
 CoordBase::boundary_size_z_lower        = 3
@@ -269,7 +269,7 @@ MinSearch::outfile_basename    = "MinSearch%d.asc"
 
 Carpet::ghost_size                      = 3
 Carpet::domain_from_coordbase           = "yes"
-Carpet::max_refinement_levels           = 9
+Carpet::max_refinement_levels           = 8
 Carpet::refinement_factor               = 2
 Carpet::prolongation_order_space        = 5
 Carpet::prolongation_order_time         = 2
@@ -783,25 +783,25 @@ Outflow::compute_every_det[0]   =  8
 Outflow::surface_index[1]       =  1
 Outflow::compute_every_det[1]   =  64
 Outflow::override_radius[1]   =  "yes"
-Outflow::radius[1]   =  1.5
+Outflow::radius[1]   =  2
 
 
 
 # Integration Volume Boundary Fluxes
-Outflow::surface_index[1]       =  3
-Outflow::compute_every_det[1]   =  64
-
-Outflow::surface_index[2]       =  4
+Outflow::surface_index[2]       =  3
 Outflow::compute_every_det[2]   =  64
 
-Outflow::surface_index[3]       =  5
+Outflow::surface_index[3]       =  4
 Outflow::compute_every_det[3]   =  64
 
-Outflow::surface_index[4]       =  6
+Outflow::surface_index[4]       =  5
 Outflow::compute_every_det[4]   =  64
 
-Outflow::surface_index[5]       =  7
+Outflow::surface_index[5]       =  6
 Outflow::compute_every_det[5]   =  64
+
+Outflow::surface_index[6]       =  7
+Outflow::compute_every_det[6]   =  64
 
 Outflow::output_2d_data           = "no"
 Outflow::extra_variables          = "HydroBase::eps HydroBase::rho"
@@ -844,7 +844,7 @@ CarpetIOHDF5::out2D_every            = 512
 CarpetIOHDF5::out2D_xy               = "yes"
 CarpetIOHDF5::out2D_xz               = "no"
 CarpetIOHDF5::out2D_yz               = "no"
-CarpetIOHDF5::out2d_vars             = " HydroBase::eps HydroBase::rho Whisky::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi"
+CarpetIOHDF5::out2d_vars             = " HydroBase::eps HydroBase::rho" # Whisky::w_lorentz HydroBase::vel ADMBase::lapse ADMBase::shift Kranc2BSSNChiMatter::bssnham Kranc2BSSNChiMatter::bssnmom_group Kranc2BSSNChiMatter::K Kranc2BSSNChiMatter::chi"
 
 CarpetIOHDF5::out_every              = 0
 CarpetIOHDF5::out_vars               = ""
